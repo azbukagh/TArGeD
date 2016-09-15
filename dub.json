@@ -1,0 +1,9 @@
+{
+	"name": "targed",
+	"authors": [
+		"Azbuka"
+	],
+	"description": "Truevision TGA image format library",
+	"copyright": "Copyright © 2016, Azbuka",
+	"license": "MIT"
+}
