@@ -143,7 +143,7 @@ struct Image {
 		f.seek(-26, SEEK_END);
 		ubyte[26] buf;
 		f.rawRead(buf);
-		this.isnew = (buf[8..23] == "TRUEVISION-XFILE");
+		this.isnew = (buf[8..24] == "TRUEVISION-XFILE");
 		if(this.isNewTGA) {
 			//TODO check byte 24
 			this.ExtensionAreaOffset = readArray!ulong(buf[0..4]);

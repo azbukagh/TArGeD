@@ -1,7 +1,7 @@
 import std.stdio;
 import TArGeD;
 void main() {
-	auto i = Image("sample/1.tga");
+	auto i = Image("sample/CCM8.TGA");
 	writeln("Header:");
 	writeln("\tIDLength:\t", i.Header.IDLength);
 	writeln("\tCMapType:\t", i.Header.CMapType);
