@@ -2,6 +2,7 @@ module TArGeD.Util;
 
 import std.stdio : File;
 import std.bitmanip : littleEndianToNative;
+import std.algorithm : min;
 
 T readFile(T)(ref File f) {
 	ubyte[T.sizeof] buffer;

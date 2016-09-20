@@ -1,7 +1,7 @@
 import std.stdio;
 import TArGeD;
 void main() {
-	auto i = Image("sample/UCM8.TGA");
+	auto i = Image("sample/CBW8.TGA");
 	writeln("Header:");
 	writeln("\tIDLength:\t", i.Header.IDLength);
 	writeln("\tCMapType:\t", i.Header.CMapType);
@@ -16,16 +16,17 @@ void main() {
 	writefln("\tImageDescriptor:\t%b", i.Header.ImageDescriptor);
 
 	writefln("\tID:\t[%(%s, %)]", i.ID);
-	if(i.ColorMap.length != 0) {
-		writeln("ColorMap:");
-		for(size_t k = 0; k < i.ColorMap.length; k++) {
-			writefln("\t#%3d:\tR: %3d\tG: %3d\tB: %3d\tA: %3d",
-				k,
-				i.ColorMap[k].R,
-				i.ColorMap[k].G,
-				i.ColorMap[k].B,
-				i.ColorMap[k].A);
-		}
-	}
+//	if(i.ColorMap.length != 0) {
+//		writeln("ColorMap:");
+//		for(size_t k = 0; k < i.ColorMap.length; k++) {
+//			writefln("\t#%3d:\tR: %3d\tG: %3d\tB: %3d\tA: %3d",
+//				k,
+//				i.ColorMap[k].R,
+//				i.ColorMap[k].G,
+//				i.ColorMap[k].B,
+//				i.ColorMap[k].A);
+//		}
+//	}
 
+	writefln("\tThere are %d pixels", i.Pixels.length);
 }

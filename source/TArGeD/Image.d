@@ -5,18 +5,6 @@ import std.bitmanip : littleEndianToNative;
 import TArGeD.Defines;
 import TArGeD.Util;
 
-private template CMapReader(string depth) {
-	const char[] CMapReader = q{
-	case } ~ depth ~ q{:
-		ubyte[} ~ depth ~ q{/8] buf;
-		} ~ "for(size_t i = 0; i < (this.Header.CMapLength - this.Header.CMapOffset); i++) {
-			f.rawRead(buf);
-			this.ColorMap[i] = Pixel(cast(ubyte["~ depth ~ "/8]) buf);
-		}" ~ q{
-		break;
-	};
-}
-
 struct Image {
 	TGAHeader Header;
 	ubyte[] ID;
@@ -31,6 +19,7 @@ struct Image {
 		this.readHeader(f);
 		this.readID(f);
 		this.readColorMap(f);
+		this.readPixelData(f);
 	}
 
 	void readHeader(ref File f) {
@@ -76,34 +65,66 @@ struct Image {
 		}
 	}
 
-//	void readPixelData(ref File f) {
-//		switch(this.Header.IType) with(ImageType) {
-//			case UNCOMPRESSED_MAPPED:
-//			case UNCOMPRESSED_TRUECOLOR:
-//			case UNCOMPRESSED_GRAYSCALE:
-//				readUncompressedPixelData(f);
-//				break;
-//			case COMPRESSED_MAPPED:
-//			case COMPRESSED_TRUECOLOR:
-//			case COMPRESSED_GRAYSCALE:
-//				readCompressedPixelData(f);
-//				break;
-//			default:
-//				break;
-//		}
-//	}
+	void readPixelData(ref File f) {
+		switch(this.Header.IType) with(ImageType) {
+			case UNCOMPRESSED_MAPPED:
+			case UNCOMPRESSED_TRUECOLOR:
+			case UNCOMPRESSED_GRAYSCALE:
+				readUncompressedPixelData(f);
+				break;
+			case COMPRESSED_MAPPED:
+			case COMPRESSED_TRUECOLOR:
+			case COMPRESSED_GRAYSCALE:
+				readCompressedPixelData(f);
+				break;
+			default:
+				break;
+		}
+	}
 
-//	private void readUncompressedPixelData(ref File f) {
-//		auto r = (this.Header.CMapType = ColorMapType.NOT_PRESENT)
-//			? (ubyte[] d) => Pixel(d
-//			: (ubyte[] d) => this.ColorMap[readArray!uint(b)];
-//		this.Pixels.length = this.Header.Width * this.Header.Width;
+	private void readUncompressedPixelData(ref File f) {
+		auto r = (this.Header.CMapType == ColorMapType.PRESENT)
+			? delegate (ubyte[] d) =>
+				this.ColorMap[readArray!uint(d)]
+			: delegate (ubyte[] d) =>
+				Pixel(d);
+		this.Pixels.length = this.Header.Width * this.Header.Width;
 
-//		ubyte[] buf 
-//		foreach(ref p; this.Pixels) {
-//			
-//	}
-//	private void readCompressedPixelData(ref File f) {
-//	}
+		ubyte[] buf = new ubyte[this.Header.PixelDepth/8];
+		foreach(ref p; this.Pixels) {
+			f.rawRead(buf);
+			p = r(buf);
+		}
+	}
+	private void readCompressedPixelData(ref File f) {
+		auto r = (this.Header.CMapType == ColorMapType.PRESENT)
+			? delegate (ubyte[] d) =>
+				this.ColorMap[readArray!uint(d)]
+			: delegate (ubyte[] d) =>
+				Pixel(d);
+		this.Pixels.length = this.Header.Width * this.Header.Width;
+
+		ubyte[] buf = new ubyte[this.Header.PixelDepth/8+1];
+		size_t i;
+		while(i < this.Header.Width * this.Header.Height) {
+			f.rawRead(buf);
+			size_t rep = buf[0] & 0x7F;
+			this.Pixels[i] = r(buf[0..this.Header.PixelDepth/8]);
+			i++;
+			if(buf[0] & 0x80) {
+				for(size_t j = 0; j < rep; j++, i++)
+					this.Pixels[i] =
+						r(buf[1 .. this.Header.PixelDepth/8+1]);
+			} else {
+				for(size_t j=0; j < rep; j++, i++) {
+					f.rawRead(
+						buf[0..this.Header.PixelDepth/8]
+					);
+					this.Pixels[i] =
+						r(buf[0..this.Header.PixelDepth/8]);
+				}
+			}
+		}
+	}
 }
 
