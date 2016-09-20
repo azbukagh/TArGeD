@@ -1,7 +1,7 @@
 import std.stdio;
 import TArGeD;
 void main() {
-	auto i = Image("sample/CBW8.TGA");
+	auto i = Image("sample/1.tga");
 	writeln("Header:");
 	writeln("\tIDLength:\t", i.Header.IDLength);
 	writeln("\tCMapType:\t", i.Header.CMapType);
@@ -29,4 +29,9 @@ void main() {
 //	}
 
 	writefln("\tThere are %d pixels", i.Pixels.length);
+	writeln("\tNew TGA?: ", i.isNewTGA);
+	if(i.isNewTGA) {
+		writeln("\tExtenionAreaOffset:\t", i.ExtensionAreaOffset);
+		writeln("\tDeveloperDirectoryOffset:\t", i.DeveloperDirectoryOffset);
+	}
 }

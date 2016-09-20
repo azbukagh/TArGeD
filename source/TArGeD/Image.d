@@ -10,12 +10,23 @@ struct Image {
 	ubyte[] ID;
 	Pixel[] ColorMap;
 	Pixel[] Pixels;
+	ulong ExtensionAreaOffset;
+	ulong DeveloperDirectoryOffset;
+
+	private {
+		bool isnew;
+	}
+
+	bool isNewTGA() {
+		return this.isnew;
+	}
 
 	this(string filename) {
 		this(File(filename, "rb"));
 	}
 
 	this(File f) {
+		this.readFooter(f);
 		this.readHeader(f);
 		this.readID(f);
 		this.readColorMap(f);
@@ -96,6 +107,7 @@ struct Image {
 			p = r(buf);
 		}
 	}
+
 	private void readCompressedPixelData(ref File f) {
 		auto r = (this.Header.CMapType == ColorMapType.PRESENT)
 			? delegate (ubyte[] d) =>
@@ -125,6 +137,20 @@ struct Image {
 				}
 			}
 		}
+	}
+
+	void readFooter(ref File f) {
+		f.seek(-26, SEEK_END);
+		ubyte[26] buf;
+		f.rawRead(buf);
+		this.isnew = (buf[8..23] == "TRUEVISION-XFILE");
+		if(this.isNewTGA) {
+			//TODO check byte 24
+			this.ExtensionAreaOffset = readArray!ulong(buf[0..4]);
+			this.DeveloperDirectoryOffset =
+				readArray!ulong(buf[4..8]);
+		}
+		f.seek(0, SEEK_SET);
 	}
 }
 

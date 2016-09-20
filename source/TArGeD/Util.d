@@ -10,7 +10,7 @@ T readFile(T)(ref File f) {
 	return littleEndianToNative!T(buffer);
 }
 
-T readArray(T)(ref ubyte[] data) {
+T readArray(T)(ubyte[] data) {
 	const auto k = min(cast(uint) T.sizeof, data.length);
 	ubyte[T.sizeof] o;
 	o[0..k] = data[0..k];
