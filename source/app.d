@@ -1,5 +1,5 @@
 import std.stdio;
-import TGA;
+import TArGeD;
 void main() {
 	auto i = Image("sample/UCM8.TGA");
 	writeln("Header:");
