@@ -4,6 +4,8 @@ import std.stdio;
 import std.bitmanip : littleEndianToNative;
 import TArGeD.Defines;
 import TArGeD.Util;
+import std.string : fromStringz;
+import std.datetime : DateTime;
 
 struct Image {
 	TGAHeader Header;
@@ -12,6 +14,7 @@ struct Image {
 	Pixel[] Pixels;
 	ulong ExtensionAreaOffset;
 	ulong DeveloperDirectoryOffset;
+	TGAExtensionArea ExtensionArea;
 
 	private {
 		bool newFormat;
@@ -31,6 +34,8 @@ struct Image {
 		this.readID(f);
 		this.readColorMap(f);
 		this.readPixelData(f);
+		if(this.isNewTGA && ExtensionAreaOffset != 0)
+			this.readExtensionArea(f);
 	}
 
 	void readHeader(ref File f) {
@@ -154,6 +159,44 @@ struct Image {
 	}
 
 	void readExtensionArea(ref File f) {
+		this.ExtensionArea.Size	=
+			f.readFile!(typeof(TGAExtensionArea.Size));
+		if(this.ExtensionArea.Size != 495) {
+			// Not TGA v2.0
+		}
+		this.ExtensionArea.AuthorName	=
+			f.readFile!(char[41]).fromStringz;
+		foreach(size_t i; 0..4)
+			this.ExtensionArea.AuthorComments[i]	=
+				f.readFile!(char[81]).fromStringz;
+		ushort Month, Day, Year, Hour, Minute, Second;
+		Month	= f.readFile!(ushort);
+		Day	= f.readFile!(ushort);
+		Year	= f.readFile!(ushort);
+		Hour	= f.readFile!(ushort);
+		Minute	= f.readFile!(ushort);
+		Second	= f.readFile!(ushort);
+		this.ExtensionArea.Timestamp = DateTime(Year,
+			Month,
+			Day,
+			Hour,
+			Minute,
+			Second);
+		this.ExtensionArea.JobName	=
+			f.readFile!(char[41]).fromStringz;
+
+		f.readFile!(ushort); // |
+		f.readFile!(ushort); //  > JobTime
+		f.readFile!(ushort); // |
+
+		this.ExtensionArea.SoftwareID	=
+			f.readFile!(char[41]).fromStringz;
+		this.ExtensionArea.SoftwareVersion	= Version(
+			f.readFile!(typeof(Version.Number)),
+			f.readFile!(typeof(Version.Letter))
+		);
+		this.ExtensionArea.KeyColor	=
+			f.readFile!(typeof(TGAExtensionArea.KeyColor));
 		
 	}
 }
