@@ -1,5 +1,7 @@
 module TArGeD.Defines;
 
+import std.datetime : DateTime;
+
 enum ColorMapType : ubyte { 
 	NOT_PRESENT	= 0,
 	PRESENT	= 1
@@ -28,6 +30,42 @@ struct TGAHeader {
 	ushort Height;
 	ubyte PixelDepth;
 	ubyte ImageDescriptor;
+}
+
+struct Version {
+	ushort Number;
+	char Letter;
+}
+
+struct AspectRatio {
+	ushort Numerator;
+	ushort Denominator;
+}
+
+struct GammaValue {
+	ushort Numerator;
+	ushort Denominator;
+}
+
+struct TGAExtensionArea {
+	ushort Size;
+	char[40] AuthorName;
+	char[4][80] AuthorComments;
+	DateTime Timestamp;
+	char[40] JobName;
+	DateTime JobTime;
+	char[40] SoftwareID;
+	Version SoftwareVersion;
+	ulong KeyColor;
+	AspectRatio PixelAspectRatio;
+	GammaValue Gamma;
+	ulong ColorCorrectionOffset;
+	ulong PostageStampOffset;
+	ulong ScanLineOffset;
+	ubyte AttributesType; // TODO: handle it
+	// ulong[] ScanLineTable;
+	// TODO PostageStamp table
+	// TODO ColorCorrection table
 }
 
 struct Pixel {
