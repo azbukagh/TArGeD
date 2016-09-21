@@ -14,11 +14,11 @@ struct Image {
 	ulong DeveloperDirectoryOffset;
 
 	private {
-		bool isnew;
+		bool newFormat;
 	}
 
 	bool isNewTGA() {
-		return this.isnew;
+		return this.newFormat;
 	}
 
 	this(string filename) {
@@ -143,9 +143,9 @@ struct Image {
 		f.seek(-26, SEEK_END);
 		ubyte[26] buf;
 		f.rawRead(buf);
-		this.isnew = (buf[8..24] == "TRUEVISION-XFILE");
+		this.newFormat = (buf[8..24] == "TRUEVISION-XFILE" &&
+			buf[24] == '.');
 		if(this.isNewTGA) {
-			//TODO check byte 24
 			this.ExtensionAreaOffset = readArray!ulong(buf[0..4]);
 			this.DeveloperDirectoryOffset =
 				readArray!ulong(buf[4..8]);
