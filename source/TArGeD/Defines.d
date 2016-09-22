@@ -50,7 +50,7 @@ struct GammaValue {
 struct TGAExtensionArea {
 	ushort Size;
 	char[40] AuthorName;
-	char[4][80] AuthorComments;
+	char[80][4] AuthorComments;
 	DateTime Timestamp;
 	char[40] JobName;
 	DateTime JobTime;

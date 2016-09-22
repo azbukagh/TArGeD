@@ -159,16 +159,17 @@ struct Image {
 	}
 
 	void readExtensionArea(ref File f) {
+		f.seek(this.ExtensionAreaOffset, SEEK_SET);
 		this.ExtensionArea.Size	=
 			f.readFile!(typeof(TGAExtensionArea.Size));
 		if(this.ExtensionArea.Size != 495) {
 			// Not TGA v2.0
 		}
 		this.ExtensionArea.AuthorName	=
-			f.readFile!(char[41]).fromStringz;
+			f.rawRead(new char[41])[0..40];
 		foreach(size_t i; 0..4)
 			this.ExtensionArea.AuthorComments[i]	=
-				f.readFile!(char[81]).fromStringz;
+				f.rawRead(new char[81])[0..80];
 		ushort Month, Day, Year, Hour, Minute, Second;
 		Month	= f.readFile!(ushort);
 		Day	= f.readFile!(ushort);
@@ -176,21 +177,22 @@ struct Image {
 		Hour	= f.readFile!(ushort);
 		Minute	= f.readFile!(ushort);
 		Second	= f.readFile!(ushort);
-		this.ExtensionArea.Timestamp = DateTime(Year,
-			Month,
-			Day,
-			Hour,
-			Minute,
-			Second);
+		if((Year && Month && Day) != 0)
+			this.ExtensionArea.Timestamp = DateTime(Year,
+				Month,
+				Day,
+				Hour,
+				Minute,
+				Second);
 		this.ExtensionArea.JobName	=
-			f.readFile!(char[41]).fromStringz;
+			f.rawRead(new char[41])[0..40];
 
 		f.readFile!(ushort); // |
 		f.readFile!(ushort); //  > JobTime
 		f.readFile!(ushort); // |
 
 		this.ExtensionArea.SoftwareID	=
-			f.readFile!(char[41]).fromStringz;
+			f.rawRead(new char[41])[0..40];
 		this.ExtensionArea.SoftwareVersion	= Version(
 			f.readFile!(typeof(Version.Number)),
 			f.readFile!(typeof(Version.Letter))

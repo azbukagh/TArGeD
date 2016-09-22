@@ -29,9 +29,19 @@ void main() {
 //	}
 
 	writefln("\tThere are %d pixels", i.Pixels.length);
-	writeln("\tNew TGA?: ", i.isNewTGA);
+	writeln("New TGA?: ", i.isNewTGA);
 	if(i.isNewTGA) {
 		writeln("\tExtenionAreaOffset:\t", i.ExtensionAreaOffset);
 		writeln("\tDeveloperDirectoryOffset:\t", i.DeveloperDirectoryOffset);
+		writeln("ExtensionArea:");
+		writeln("\tSize:\t", i.ExtensionArea.Size);
+		writeln("\tAuthorName:\t", i.ExtensionArea.AuthorName);
+		foreach(size_t l; 0..4)
+			writefln("\tAutorComments[%d]:\t%s",
+				l,
+				i.ExtensionArea.AuthorComments[l]);
+		writeln("\tTimestamp:\t",
+			i.ExtensionArea.Timestamp.toSimpleString);
+		
 	}
 }
