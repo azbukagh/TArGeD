@@ -1,6 +1,8 @@
 module TArGeD.Defines;
 
-import std.datetime : DateTime;
+import std.datetime : DateTime, TimeOfDay;
+import std.array : appender;
+import std.format : formattedWrite;
 
 enum ColorMapType : ubyte { 
 	NOT_PRESENT	= 0,
@@ -35,16 +37,51 @@ struct TGAHeader {
 struct Version {
 	ushort Number;
 	char Letter;
+
+	string toString() {
+		auto a = appender!string();
+		a.formattedWrite("%.2f%s",
+			cast(float) this.Number / 100,
+			this.Letter);
+		return a.data;
+	}
 }
 
-struct AspectRatio {
+struct TGARatio {
 	ushort Numerator;
 	ushort Denominator;
+	string toString() {
+		auto a = appender!string();
+		a.formattedWrite("%d:%d",
+			this.Numerator,
+			this.Denominator);
+		return a.data;
+	}
+
+	bool isEnabled() {
+		return this.Denominator != 0;
+	}
 }
 
-struct GammaValue {
+struct TGAGamma {
 	ushort Numerator;
 	ushort Denominator;
+	string toString() {
+		auto a = appender!string();
+		a.formattedWrite("%d.%d",
+			this.Numerator,
+			this.Denominator);
+		return a.data;
+	}
+
+	bool isEnabled() {
+		return this.Denominator != 0;
+	}
+
+	bool isCorrect() {
+		return (this.Numerator <= 10 && this.Denominator == 0) ||
+			(this.Numerator < 10);
+	}
 }
 
 struct TGAExtensionArea {
@@ -53,19 +90,16 @@ struct TGAExtensionArea {
 	char[80][4] AuthorComments;
 	DateTime Timestamp;
 	char[40] JobName;
-	DateTime JobTime;
+	TimeOfDay JobTime;
 	char[40] SoftwareID;
 	Version SoftwareVersion;
-	ulong KeyColor;
-	AspectRatio PixelAspectRatio;
-	GammaValue Gamma;
-	ulong ColorCorrectionOffset;
-	ulong PostageStampOffset;
-	ulong ScanLineOffset;
+	uint KeyColor;
+	TGARatio AspectRatio;
+	TGAGamma Gamma;
+	uint ColorCorrectionOffset;
+	uint PostageStampOffset;
+	uint ScanLineOffset;
 	ubyte AttributesType; // TODO: handle it
-	// ulong[] ScanLineTable;
-	// TODO PostageStamp table
-	// TODO ColorCorrection table
 }
 
 struct Pixel {

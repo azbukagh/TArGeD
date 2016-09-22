@@ -31,8 +31,8 @@ void main() {
 	writefln("\tThere are %d pixels", i.Pixels.length);
 	writeln("New TGA?: ", i.isNewTGA);
 	if(i.isNewTGA) {
-		writeln("\tExtenionAreaOffset:\t", i.ExtensionAreaOffset);
-		writeln("\tDeveloperDirectoryOffset:\t", i.DeveloperDirectoryOffset);
+		writefln("\tExtenionAreaOffset:\t0x%x", i.ExtensionAreaOffset);
+		writefln("\tDeveloperDirectoryOffset:\t0x%x", i.DeveloperDirectoryOffset);
 		writeln("ExtensionArea:");
 		writeln("\tSize:\t", i.ExtensionArea.Size);
 		writeln("\tAuthorName:\t", i.ExtensionArea.AuthorName);
@@ -42,6 +42,28 @@ void main() {
 				i.ExtensionArea.AuthorComments[l]);
 		writeln("\tTimestamp:\t",
 			i.ExtensionArea.Timestamp.toSimpleString);
-		
+		writeln("\tJobName:\t", i.ExtensionArea.JobName);
+		writeln("\tJobTime:\t", i.ExtensionArea.JobTime.toString);
+		writeln("\tSoftwareID:\t", i.ExtensionArea.SoftwareID);
+		writeln("\tSoftwareVersion:\t",
+			i.ExtensionArea.SoftwareVersion.toString);
+		writeln("\tKeyColor:\t", i.ExtensionArea.KeyColor);
+		writeln("\tAspectRatio:\t", i.ExtensionArea.AspectRatio.toString);
+		writeln("\tGamma:\t", i.ExtensionArea.Gamma.toString);
+
+		writefln("\tColorCorrectionOffset:\t0x%x",
+			i.ExtensionArea.ColorCorrectionOffset);
+		writefln("\tPostageStampOffset:\t0x%x",
+			i.ExtensionArea.PostageStampOffset);
+		writefln("\tScanLineOffset:\t0x%x",
+			i.ExtensionArea.ScanLineOffset);
+		writeln("\tAttributesType:\t",
+			i.ExtensionArea.AttributesType);
+
+		if(i.ExtensionArea.ScanLineOffset != 0) {
+			writeln("ScanLineTable:");
+			foreach(ref f; i.ScanLineTable)
+				writeln("\t", f);
+		}
 	}
 }

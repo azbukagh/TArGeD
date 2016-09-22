@@ -1,11 +1,9 @@
 module TArGeD.Image;
 
 import std.stdio;
-import std.bitmanip : littleEndianToNative;
 import TArGeD.Defines;
 import TArGeD.Util;
-import std.string : fromStringz;
-import std.datetime : DateTime;
+import std.datetime : DateTime, TimeOfDay;
 
 struct Image {
 	TGAHeader Header;
@@ -15,6 +13,7 @@ struct Image {
 	ulong ExtensionAreaOffset;
 	ulong DeveloperDirectoryOffset;
 	TGAExtensionArea ExtensionArea;
+	uint[] ScanLineTable;
 
 	private {
 		bool newFormat;
@@ -187,9 +186,12 @@ struct Image {
 		this.ExtensionArea.JobName	=
 			f.rawRead(new char[41])[0..40];
 
-		f.readFile!(ushort); // |
-		f.readFile!(ushort); //  > JobTime
-		f.readFile!(ushort); // |
+		ushort H, M, S;
+		H	= f.readFile!(ushort);
+		M	= f.readFile!(ushort);
+		S	= f.readFile!(ushort);
+		if((H && M && S) != 0)
+			this.ExtensionArea.JobTime	= TimeOfDay(H, M, S);
 
 		this.ExtensionArea.SoftwareID	=
 			f.rawRead(new char[41])[0..40];
@@ -199,7 +201,30 @@ struct Image {
 		);
 		this.ExtensionArea.KeyColor	=
 			f.readFile!(typeof(TGAExtensionArea.KeyColor));
-		
+		this.ExtensionArea.AspectRatio	= TGARatio(
+			f.readFile!(typeof(TGARatio.Numerator)),
+			f.readFile!(typeof(TGARatio.Denominator))
+		);
+		this.ExtensionArea.Gamma	= TGAGamma(
+			f.readFile!(typeof(TGAGamma.Numerator)),
+			f.readFile!(typeof(TGAGamma.Denominator))
+		);
+
+		this.ExtensionArea.ColorCorrectionOffset	=
+			f.readFile!(typeof(TGAExtensionArea.ColorCorrectionOffset));
+		this.ExtensionArea.PostageStampOffset	=
+			f.readFile!(typeof(TGAExtensionArea.PostageStampOffset));
+		this.ExtensionArea.ScanLineOffset	=
+			f.readFile!(typeof(TGAExtensionArea.ScanLineOffset));
+		this.ExtensionArea.AttributesType	=
+			f.readFile!(typeof(TGAExtensionArea.AttributesType));
+
+		if(this.ExtensionArea.ScanLineOffset != 0) {
+			f.seek(this.ExtensionArea.ScanLineOffset, SEEK_SET);
+			this.ScanLineTable.length = this.Header.Height;
+			foreach(ref i; this.ScanLineTable)
+				i	= f.readFile!(typeof(ScanLineTable[0]));
+		}
 	}
 }
 
