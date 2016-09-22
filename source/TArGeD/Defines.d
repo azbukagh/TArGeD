@@ -102,6 +102,17 @@ struct TGAExtensionArea {
 	ubyte AttributesType; // TODO: handle it
 }
 
+struct DeveloperField {
+	ushort Tag;
+	uint Offset;
+	uint Size;
+}
+
+struct TGADeveloperArea {
+	ushort Size;
+	DeveloperField[] Data;
+}
+
 struct Pixel {
 	ubyte R, G, B, A;
 
