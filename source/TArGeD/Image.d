@@ -5,6 +5,15 @@ import TArGeD.Defines;
 import TArGeD.Util;
 import std.datetime : DateTime, TimeOfDay;
 
+class TArGeDException : Exception {
+	pure nothrow @nogc @safe this(string msg,
+		string file = __FILE__,
+		size_t line = __LINE__,
+		Throwable next = null) {
+			super(msg, file, line, next);
+	}
+}
+
 struct Image {
 	TGAHeader Header;
 	ubyte[] ID;
@@ -93,6 +102,9 @@ struct Image {
 				readCompressedPixelData(f);
 				break;
 			default:
+				throw new TArGeDException(
+					"Wrong image type"
+				);
 				break;
 		}
 	}
@@ -162,7 +174,7 @@ struct Image {
 		this.ExtensionArea.Size	=
 			f.readFile!(typeof(TGAExtensionArea.Size));
 		if(this.ExtensionArea.Size != 495) {
-			// Not TGA v2.0
+			throw new TArGeDException("Bad ExtensionArea size");
 		}
 		this.ExtensionArea.AuthorName	=
 			f.rawRead(new char[41])[0..40];
