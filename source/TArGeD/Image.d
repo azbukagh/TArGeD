@@ -189,10 +189,7 @@ struct Image {
 
 		this.ExtensionArea.SoftwareID	=
 			f.rawRead(new char[41])[0..40];
-		this.ExtensionArea.SoftwareVersion	= Version(
-			f.readFile!(typeof(Version.Number)),
-			f.readFile!(typeof(Version.Letter))
-		);
+		this.ExtensionArea.SoftwareVersion	= TGAVersion(f);
 		this.ExtensionArea.KeyColor	=
 			f.readFile!(typeof(TGAExtensionArea.KeyColor));
 		this.ExtensionArea.AspectRatio	= TGARatio(
