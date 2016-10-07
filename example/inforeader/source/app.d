@@ -1,7 +1,13 @@
 import std.stdio;
 import TArGeD;
-void main() {
-	auto i = Image("sample/CCM8.TGA");
+
+void main(string[] args) {
+	if(args.length != 2) {
+		writefln("Usage: %s <file>");
+		return;
+	}
+
+	auto i = Image(args[1]);
 	writeln("Header:");
 	writeln("\tIDLength:\t", i.Header.IDLength);
 	writeln("\tCMapType:\t", i.Header.CMapType);

@@ -62,6 +62,7 @@ struct TGAHeader {
 		}
 
 	this(ref File f) {
+		f.seek(0, SEEK_SET);
 		this.IDLength	= f.readFile!(typeof(TGAHeader.IDLength));
 		this.CMapType	= f.readFile!(typeof(TGAHeader.CMapType));
 		this.IType	= f.readFile!(typeof(TGAHeader.IType));

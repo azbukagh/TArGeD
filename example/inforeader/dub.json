@@ -1,0 +1,14 @@
+{
+	"name": "inforeader",
+	"authors": [
+		"Azbuka"
+	],
+	"description": "TArGeD example",
+	"copyright": "Copyright © 2016, Azbuka",
+	"license": "MIT",
+	"dependencies": {
+		"targed": {
+			"path": "../../"
+		}
+	}
+}

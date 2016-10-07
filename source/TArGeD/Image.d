@@ -149,7 +149,6 @@ struct Image {
 			this.DeveloperDirectoryOffset =
 				readArray!ulong(buf[4..8]);
 		}
-		f.seek(0, SEEK_SET);
 	}
 
 	void readExtensionArea(ref File f) {
