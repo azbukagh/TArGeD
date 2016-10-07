@@ -42,7 +42,7 @@ struct Image {
 		this.readID(f);
 		this.readColorMap(f);
 		this.readPixelData(f);
-		if(this.isNewTGA && ExtensionAreaOffset != 0)
+		if(this.isNewTGA && (ExtensionAreaOffset != 0))
 			this.readExtensionArea(f);
 	}
 
