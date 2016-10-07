@@ -113,7 +113,7 @@ struct TGAVersion {
 	char Letter;
 
 	this(ushort n, char l) {
-		this.Number = n / 100;
+		this.Number = cast(float) n / 100;
 		this.Letter = l;
 	}
 
@@ -124,7 +124,7 @@ struct TGAVersion {
 	string toString() {
 		auto a = appender!string();
 		a.formattedWrite("%.2f%s",
-			cast(float) this.Number / 100,
+			this.Number,
 			this.Letter);
 		return a.data;
 	}
