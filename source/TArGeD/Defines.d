@@ -3,6 +3,9 @@ module TArGeD.Defines;
 import std.datetime : DateTime, TimeOfDay;
 import std.array : appender;
 import std.format : formattedWrite;
+import std.stdio;
+import TArGeD.Util;
+import std.array;
 
 enum ColorMapType : ubyte { 
 	NOT_PRESENT	= 0,
@@ -32,6 +35,47 @@ struct TGAHeader {
 	ushort Height;
 	ubyte PixelDepth;
 	ubyte ImageDescriptor;
+
+	this(ImageType i,
+		ushort width,
+		ushort height,
+		ubyte pixeldepth = 32,
+		ushort xorig = 0,
+		ushort yorig = 0,
+		ubyte colormapdepth = 0) {
+			this.IType = i;
+			switch(this.IType) with(ImageType) {
+				case UNCOMPRESSED_MAPPED:
+				case COMPRESSED_MAPPED:
+					this.CMapType = ColorMapType.PRESENT;
+					break;
+				default:
+					this.CMapType = ColorMapType.NOT_PRESENT;
+					break;
+			}
+			this.Width = width;
+			this.Height = height;
+			this.PixelDepth = pixeldepth;
+			this.XOrigin = xorig;
+			this.YOrigin = yorig;
+			this.CMapDepth = colormapdepth;
+		}
+
+	this(ref File f) {
+		this.IDLength	= f.readFile!(typeof(TGAHeader.IDLength));
+		this.CMapType	= f.readFile!(typeof(TGAHeader.CMapType));
+		this.IType	= f.readFile!(typeof(TGAHeader.IType));
+		this.CMapOffset	= f.readFile!(typeof(TGAHeader.CMapOffset));
+		this.CMapLength	= f.readFile!(typeof(TGAHeader.CMapLength));
+		this.CMapDepth	= f.readFile!(typeof(TGAHeader.CMapDepth));
+		this.XOrigin	= f.readFile!(typeof(TGAHeader.XOrigin));
+		this.YOrigin	= f.readFile!(typeof(TGAHeader.YOrigin));
+		this.Width	= f.readFile!(typeof(TGAHeader.Width));
+		this.Height	= f.readFile!(typeof(TGAHeader.Height));
+		this.PixelDepth	= f.readFile!(typeof(TGAHeader.PixelDepth));
+		this.ImageDescriptor	=
+			f.readFile!(typeof(TGAHeader.ImageDescriptor));
+	}
 }
 
 struct Version {

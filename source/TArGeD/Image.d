@@ -38,28 +38,12 @@ struct Image {
 
 	this(File f) {
 		this.readFooter(f);
-		this.readHeader(f);
+		this.Header = TGAHeader(f);
 		this.readID(f);
 		this.readColorMap(f);
 		this.readPixelData(f);
 		if(this.isNewTGA && ExtensionAreaOffset != 0)
 			this.readExtensionArea(f);
-	}
-
-	void readHeader(ref File f) {
-		this.Header.IDLength	= f.readFile!(typeof(Header.IDLength));
-		this.Header.CMapType	= f.readFile!(typeof(Header.CMapType));
-		this.Header.IType	= f.readFile!(typeof(Header.IType));
-		this.Header.CMapOffset	= f.readFile!(typeof(Header.CMapOffset));
-		this.Header.CMapLength	= f.readFile!(typeof(Header.CMapLength));
-		this.Header.CMapDepth	= f.readFile!(typeof(Header.CMapDepth));
-		this.Header.XOrigin	= f.readFile!(typeof(Header.XOrigin));
-		this.Header.YOrigin	= f.readFile!(typeof(Header.YOrigin));
-		this.Header.Width	= f.readFile!(typeof(Header.Width));
-		this.Header.Height	= f.readFile!(typeof(Header.Height));
-		this.Header.PixelDepth	= f.readFile!(typeof(Header.PixelDepth));
-		this.Header.ImageDescriptor	=
-			f.readFile!(typeof(Header.ImageDescriptor));
 	}
 
 	void readID(ref File f) {
@@ -105,7 +89,6 @@ struct Image {
 				throw new TArGeDException(
 					"Wrong image type"
 				);
-				break;
 		}
 	}
 
