@@ -1,3 +1,6 @@
+/**
+*	Image reader
+*/
 module TArGeD.Image;
 
 import std.stdio;
@@ -5,6 +8,9 @@ import TArGeD.Defines;
 import TArGeD.Util;
 import std.datetime : DateTime, TimeOfDay;
 
+/**
+*	Thrown if errors happen.
+*/
 class TArGeDException : Exception {
 	pure nothrow @nogc @safe this(string msg,
 		string file = __FILE__,
@@ -14,28 +20,46 @@ class TArGeDException : Exception {
 	}
 }
 
+/**
+*	Reads TARGA image
+*/
 struct Image {
-	TGAHeader Header;
-	ubyte[] ID;
+	TGAHeader Header;	/// Header of the image
+	ubyte[] ID;	/// Identifying information about the image
+	/**
+	*	Color map data, if `Header.CMapType = ColorMapType.PRESENT`
+	*/
 	Pixel[] ColorMap;
-	Pixel[] Pixels;
-	ulong ExtensionAreaOffset;
-	ulong DeveloperDirectoryOffset;
+	Pixel[] Pixels;	/// Contains `Header.Width*Header.Height` pixels
+	ulong ExtensionAreaOffset;	/// Offset of extension area
+	ulong DeveloperDirectoryOffset;	/// Offset of developer area
+	/**
+	*	Extension area, if `Image.isNewTGA && (Image.ExtensionAreaOffset != 0)`
+	*/
 	TGAExtensionArea ExtensionArea;
+	/**
+	*	Scan line table. Empty if no scan line table presented
+	*/
 	uint[] ScanLineTable;
 
 	private {
 		bool newFormat;
 	}
 
+	/**
+	*	New TARGA image format contains Developer area and Extension area
+	*/
 	bool isNewTGA() {
 		return this.newFormat;
 	}
 
+	/**
+	*	Reads image
+	*/
 	this(string filename) {
 		this(File(filename, "rb"));
 	}
-
+	/// ditto
 	this(File f) {
 		this.readFooter(f);
 		this.Header = TGAHeader(f);
@@ -46,7 +70,7 @@ struct Image {
 			this.readExtensionArea(f);
 	}
 
-	void readID(ref File f) {
+	private void readID(ref File f) {
 		if(this.Header.IDLength) {
 			this.ID = f.rawRead(new ubyte[this.Header.IDLength]);
 		} else {
@@ -54,7 +78,7 @@ struct Image {
 		}
 	}
 
-	void readColorMap(ref File f) {
+	private void readColorMap(ref File f) {
 		if(this.Header.CMapType == ColorMapType.NOT_PRESENT) {
 			this.ColorMap = [];
 			return;
@@ -73,7 +97,7 @@ struct Image {
 		}
 	}
 
-	void readPixelData(ref File f) {
+	private void readPixelData(ref File f) {
 		switch(this.Header.IType) with(ImageType) {
 			case UNCOMPRESSED_MAPPED:
 			case UNCOMPRESSED_TRUECOLOR:
@@ -138,7 +162,7 @@ struct Image {
 		}
 	}
 
-	void readFooter(ref File f) {
+	private void readFooter(ref File f) {
 		f.seek(-26, SEEK_END);
 		ubyte[26] buf;
 		f.rawRead(buf);
@@ -151,7 +175,7 @@ struct Image {
 		}
 	}
 
-	void readExtensionArea(ref File f) {
+	private void readExtensionArea(ref File f) {
 		f.seek(this.ExtensionAreaOffset, SEEK_SET);
 		this.ExtensionArea.Size	=
 			f.readFile!(typeof(TGAExtensionArea.Size));

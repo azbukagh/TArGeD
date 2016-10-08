@@ -1,3 +1,6 @@
+/**
+*	Utility functions
+*/
 module TArGeD.Util;
 
 import std.stdio : File;
