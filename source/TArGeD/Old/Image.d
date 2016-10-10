@@ -137,7 +137,7 @@ struct Image {
 				this.ColorMap[readArray!uint(d)]
 			: delegate (ubyte[] d) =>
 				Pixel(d);
-		this.Pixels.length = this.Header.Width * this.Header.Width;
+		this.Pixels.length = this.Header.Width * this.Header.Height;
 
 		ubyte[] buf = new ubyte[this.Header.PixelDepth/8+1];
 		size_t i;
