@@ -1,13 +1,13 @@
 /**
 *	This module contains definitions of basic types
 */
-module TArGeD.Defines;
+module TArGeD.Old.Defines;
 
 import std.datetime : DateTime, TimeOfDay;
 import std.array : appender;
 import std.format : formattedWrite;
 import std.stdio;
-import TArGeD.Util;
+import TArGeD.Old.Util;
 import std.array;
 
 /**

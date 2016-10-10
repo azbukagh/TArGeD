@@ -1,11 +1,11 @@
 /**
 *	Image reader
 */
-module TArGeD.Image;
+module TArGeD.Old.Image;
 
 import std.stdio;
-import TArGeD.Defines;
-import TArGeD.Util;
+import TArGeD.Old.Defines;
+import TArGeD.Old.Util;
 import std.datetime : DateTime, TimeOfDay;
 
 /**

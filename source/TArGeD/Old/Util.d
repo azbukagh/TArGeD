@@ -1,7 +1,7 @@
 /**
 *	Utility functions
 */
-module TArGeD.Util;
+module TArGeD.Old.Util;
 
 import std.stdio : File;
 import std.bitmanip : littleEndianToNative;
