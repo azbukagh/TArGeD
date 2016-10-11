@@ -1,9 +1,9 @@
 module TArGeD.Image;
 
 import TArGeD.Defines;
-import TArGeD.Old.Util;
+import TArGeD.Util;
 import std.stdio;
-import std.traits;
+import std.traits : isArray, isImplicitlyConvertible;
 
 class Image {
 	private {
@@ -253,7 +253,5 @@ class Image {
 	@property void YOrigin(ushort yorigin) {
 		this.ImageHeader.YOrigin = yorigin;
 	}
-
-	
 }
 

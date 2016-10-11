@@ -7,7 +7,7 @@ import std.datetime : DateTime, TimeOfDay;
 import std.array : appender;
 import std.format : formattedWrite;
 import std.stdio;
-import TArGeD.Old.Util;
+import TArGeD.Util;
 import std.array;
 
 class TArGeDException : Exception {
