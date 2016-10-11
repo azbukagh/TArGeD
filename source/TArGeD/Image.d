@@ -3,12 +3,13 @@ module TArGeD.Image;
 import TArGeD.Defines;
 import TArGeD.Old.Util;
 import std.stdio;
+import std.traits;
 
 class Image {
 	private {
 		TGAHeader ImageHeader;
 		ubyte[] ImageID;
-		Pixel[] ImageColorMap;
+		Pixel[] ImageColourMap;
 		Pixel[] ImagePixels;
 		uint ImageExtAreaOffset;
 		uint ImageDevDirOffset;
@@ -36,12 +37,12 @@ class Image {
 			this.ImageDevDirOffset);
 		this.ImageHeader = TGAHeader(f);
 		this.readID(f, this.ImageHeader.IDLength, this.ImageID);
-		this.readColorMap(f,
+		this.readColourMap(f,
 			this.ImageHeader,
-			this.ImageColorMap);
+			this.ImageColourMap);
 		this.readPixelData(f,
 			this.ImageHeader,
-			this.ImageColorMap,
+			this.ImageColourMap,
 			this.ImagePixels);
 		if(this.isNew && (this.ImageExtAreaOffset != 0))
 			this.ImageExtArea = TGAExtensionArea(f,
@@ -65,18 +66,18 @@ class Image {
 		}
 	}
 
-	private void readColorMap(ref File f, ref TGAHeader hdr, out Pixel[] CMap) {
-			if(hdr.CMapType == ColorMapType.NOT_PRESENT) {
+	private void readColourMap(ref File f, ref TGAHeader hdr, out Pixel[] CMap) {
+			if(hdr.ColourMapType == TGAColourMapType.NOT_PRESENT) {
 				return;
 			}
 
-			CMap.length = hdr.CMapLength;	// TODO allocate it with std.experimental.allocator
+			CMap.length = hdr.ColourMapLength;	// TODO allocate it with std.experimental.allocator
 
-			f.seek(hdr.CMapOffset * hdr.CMapDepth, SEEK_CUR);
+			f.seek(hdr.ColourMapOffset * hdr.ColourMapDepth, SEEK_CUR);
 
-			ubyte[] buf = new ubyte[hdr.CMapDepth/8];
+			ubyte[] buf = new ubyte[hdr.ColourMapDepth/8];
 
-			foreach(size_t i; 0..(hdr.CMapLength - hdr.CMapOffset)) {
+			foreach(size_t i; 0..(hdr.ColourMapLength - hdr.ColourMapOffset)) {
 				f.rawRead(buf);
 				CMap[i] = Pixel(buf);
 			}
@@ -84,15 +85,15 @@ class Image {
 
 	private void readPixelData(ref File f,
 		ref TGAHeader hdr,
-		ref Pixel[] colorMap,
+		ref Pixel[] colourMap,
 		out Pixel[] pixels) {
-			switch(hdr.IType) with(ImageType) {
+			switch(hdr.ImageType) with(TGAImageType) {
 				case UNCOMPRESSED_MAPPED:
 				case UNCOMPRESSED_TRUECOLOR:
 				case UNCOMPRESSED_GRAYSCALE:
 					readUncompressedPixelData(f,
 						hdr,
-						colorMap,
+						colourMap,
 						pixels);
 					break;
 				case COMPRESSED_MAPPED:
@@ -100,7 +101,7 @@ class Image {
 				case COMPRESSED_GRAYSCALE:
 					readCompressedPixelData(f,
 						hdr,
-						colorMap,
+						colourMap,
 						pixels);
 					break;
 				default:
@@ -112,11 +113,11 @@ class Image {
 
 	private void readUncompressedPixelData(ref File f,
 		ref TGAHeader hdr,
-		ref Pixel[] colorMap,
+		ref Pixel[] colourMap,
 		out Pixel[] pixels) {
-			auto r = (hdr.CMapType == ColorMapType.PRESENT)
+			auto r = (hdr.ColourMapType == TGAColourMapType.PRESENT)
 				? delegate (ubyte[] d) =>
-					colorMap[readArray!uint(d)]
+					colourMap[readArray!uint(d)]
 				: delegate (ubyte[] d) =>
 					Pixel(d);
 			pixels.length = hdr.Width * hdr.Height;	// TODO ALLOC
@@ -130,11 +131,11 @@ class Image {
 
 	private void readCompressedPixelData(ref File f,
 		ref TGAHeader hdr,
-		ref Pixel[] colorMap,
+		ref Pixel[] colourMap,
 		out Pixel[] pixels) {
-			auto r = (hdr.CMapType == ColorMapType.PRESENT)
+			auto r = (hdr.ColourMapType == TGAColourMapType.PRESENT)
 				? delegate (ubyte[] d) =>
-					colorMap[readArray!uint(d)]
+					colourMap[readArray!uint(d)]
 				: delegate (ubyte[] d) =>
 					Pixel(d);
 		pixels.length = hdr.Width * hdr.Height;	// TODO ALLOC
@@ -158,6 +159,52 @@ class Image {
 				}
 			}
 		}
+	}
+
+	@property Pixel[] Pixels() {
+		return this.ImagePixels;
+	}
+
+	@property void Pixels(Pixel[] data) {
+		this.ImagePixels = data;
+	}
+
+	@property OUT ID(OUT)()
+	if(isImplicitlyConvertible!(ubyte[], OUT)) {
+		return cast(OUT) this.ImageID;
+	}
+
+	@property void ID(IN)(IN data)
+	in {
+		static assert(isImplicitlyConvertible!(IN, ubyte[]));
+		static if(isArray!IN)
+			assert(data.length >= ubyte.max);
+	} body {
+		this.ImageID = cast(ubyte[]) data;
+	}
+
+	@property TGAImageType ImageType() {
+		return this.ImageHeader.ImageType;
+	}
+
+	@property void ImageType(TGAImageType imagetype) {
+		this.ImageHeader.ImageType = imagetype;
+	}
+
+	@property ushort Width() {
+		return this.ImageHeader.Width;
+	}
+
+	@property void Width(ushort width) {
+		this.ImageHeader.Width = width;
+	}
+
+	@property ushort Height() {
+		return this.ImageHeader.Height;
+	}
+
+	@property void Height(ushort height) {
+		this.ImageHeader.Height = height;
 	}
 }
 
