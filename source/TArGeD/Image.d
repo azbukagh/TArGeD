@@ -19,14 +19,6 @@ class Image {
 		bool isImageNewFormat;
 	}
 
-	@property bool isNew() {
-		return this.isImageNewFormat;
-	}
-
-	@property void isNew(bool val) {
-		this.isImageNewFormat = val;
-	}
-
 	this(string filename) {
 		this(File(filename, "rb"));
 	}
@@ -159,6 +151,14 @@ class Image {
 				}
 			}
 		}
+	}
+
+	@property bool isNew() {
+		return this.isImageNewFormat;
+	}
+
+	@property void isNew(bool val) {
+		this.isImageNewFormat = val;
 	}
 
 	@property Pixel[] Pixels() {
