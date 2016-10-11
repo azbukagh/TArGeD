@@ -232,7 +232,7 @@ struct TGAGamma {
 	/**
 	*	Returns: `false` if gamma value not presented and should not be used
 	*/
-	bool isEnabled() {
+	bool isPresented() {
 		return this.Denominator != 0;
 	}
 

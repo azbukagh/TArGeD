@@ -31,41 +31,30 @@ void main(string[] args) {
 //		}
 //	}
 
-	writeln("Is new TGA?: ", i.isNew);
-//	if(i.isNew) {
-//		writefln("\tExtenionAreaOffset:\t0x%x", i.ExtensionAreaOffset);
-//		writefln("\tDeveloperDirectoryOffset:\t0x%x", i.DeveloperDirectoryOffset);
-//		writeln("ExtensionArea:");
-//		writeln("\tSize:\t", i.ExtensionArea.Size);
-//		writeln("\tAuthorName:\t", i.ExtensionArea.AuthorName);
-//		foreach(size_t l; 0..4)
-//			writefln("\tAutorComments[%d]:\t%s",
-//				l,
-//				i.ExtensionArea.AuthorComments[l]);
-//		writeln("\tTimestamp:\t",
-//			i.ExtensionArea.Timestamp.toSimpleString);
-//		writeln("\tJobName:\t", i.ExtensionArea.JobName);
-//		writeln("\tJobTime:\t", i.ExtensionArea.JobTime.toString);
-//		writeln("\tSoftwareID:\t", i.ExtensionArea.SoftwareID);
-//		writeln("\tSoftwareVersion:\t",
-//			i.ExtensionArea.SoftwareVersion.toString);
-//		writeln("\tKeyColor:\t", i.ExtensionArea.KeyColor);
-//		writeln("\tAspectRatio:\t", i.ExtensionArea.AspectRatio.toString);
-//		writeln("\tGamma:\t", i.ExtensionArea.Gamma.toString);
-
-//		writefln("\tColorCorrectionOffset:\t0x%x",
-//			i.ExtensionArea.ColorCorrectionOffset);
-//		writefln("\tPostageStampOffset:\t0x%x",
-//			i.ExtensionArea.PostageStampOffset);
-//		writefln("\tScanLineOffset:\t0x%x",
-//			i.ExtensionArea.ScanLineOffset);
-//		writeln("\tAttributesType:\t",
-//			i.ExtensionArea.AttributesType);
-
-//		if(i.ExtensionArea.ScanLineOffset != 0) {
-//			writeln("ScanLineTable:");
-//			foreach(ref f; i.ScanLineTable)
-//				writeln("\t", f);
-//		}
-//	}
+	writeln("\tIs new TGA?: ", i.isNew);
+	if(i.isNew) {
+		writeln("ExtensionArea:");
+		writeln("\tAuthorName:\t", i.AuthorName);
+		foreach(size_t l; 0..4)
+			writefln("\tAutorComments[%d]:\t%s",
+				l,
+				i.AuthorComments[l]);
+		writeln("\tTimestamp:\t",
+			i.Timestamp.toSimpleString);
+		writeln("\tJobName:\t", i.JobName);
+		writeln("\tJobTime:\t", i.JobTime.toString);
+		writeln("\tSoftwareID:\t", i.SoftwareID);
+		writeln("\tSoftwareVersion:\t",
+			i.SoftwareVersion.toString);
+		writeln("\tAspectRatio:\t",
+			i.AspectRatio.isPresented == false
+				? "false"
+				: i.AspectRatio.toString);
+		writeln("\tGamma:\t",
+			i.Gamma.isPresented == false
+				? "false"
+				: i.Gamma.toString);
+		if(!i.Gamma.isCorrect)
+			writeln("\tGamma is not correct");
+	}
 }
