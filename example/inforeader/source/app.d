@@ -3,25 +3,22 @@ import TArGeD;
 
 void main(string[] args) {
 	if(args.length != 2) {
-		writefln("Usage: %s <file>");
+		writefln("Usage: %s <file>", args[0]);
 		return;
 	}
 
-	auto i = Image(args[1]);
+	auto i = new Image(args[1]);
 	writeln("Header:");
-	writeln("\tIDLength:\t", i.Header.IDLength);
-	writeln("\tCMapType:\t", i.Header.CMapType);
-	writeln("\tIType:\t", i.Header.IType);
-	writeln("\tCMapOffset:\t", i.Header.CMapOffset);
-	writeln("\tCMapLength:\t", i.Header.CMapLength);
-	writeln("\tCMapDepth:\t", i.Header.CMapDepth);
-	writeln("\tXOrigin:\t", i.Header.XOrigin);
-	writeln("\tYOrigin:\t", i.Header.YOrigin);
-	writefln("\tSize:\t%dx%d", i.Header.Width, i.Header.Height);
-	writeln("\tPixelDepth:\t", i.Header.PixelDepth);
-	writefln("\tImageDescriptor:\t%b", i.Header.ImageDescriptor);
+	writeln("\tColour mapped?:\t", i.isColourMapped);
+	writeln("\tImageType:\t", i.ImageType);
+	if(i.isColourMapped)
+		writeln("\tColourMapDepth:\t", i.ColourMapDepth);
+	writeln("\tXOrigin:\t", i.XOrigin);
+	writeln("\tYOrigin:\t", i.YOrigin);
+	writefln("\tSize:\t%dx%d", i.Width, i.Height);
+	writeln("\tPixelDepth:\t", i.PixelDepth);
 
-	writefln("\tID:\t[%(%s, %)]", i.ID);
+	writefln("\tID:\t[%(%s, %)]", i.ID!(ubyte[]));
 //	if(i.ColorMap.length != 0) {
 //		writeln("ColorMap:");
 //		for(size_t k = 0; k < i.ColorMap.length; k++) {
@@ -34,42 +31,41 @@ void main(string[] args) {
 //		}
 //	}
 
-	writefln("\tThere are %d pixels", i.Pixels.length);
-	writeln("New TGA?: ", i.isNewTGA);
-	if(i.isNewTGA) {
-		writefln("\tExtenionAreaOffset:\t0x%x", i.ExtensionAreaOffset);
-		writefln("\tDeveloperDirectoryOffset:\t0x%x", i.DeveloperDirectoryOffset);
-		writeln("ExtensionArea:");
-		writeln("\tSize:\t", i.ExtensionArea.Size);
-		writeln("\tAuthorName:\t", i.ExtensionArea.AuthorName);
-		foreach(size_t l; 0..4)
-			writefln("\tAutorComments[%d]:\t%s",
-				l,
-				i.ExtensionArea.AuthorComments[l]);
-		writeln("\tTimestamp:\t",
-			i.ExtensionArea.Timestamp.toSimpleString);
-		writeln("\tJobName:\t", i.ExtensionArea.JobName);
-		writeln("\tJobTime:\t", i.ExtensionArea.JobTime.toString);
-		writeln("\tSoftwareID:\t", i.ExtensionArea.SoftwareID);
-		writeln("\tSoftwareVersion:\t",
-			i.ExtensionArea.SoftwareVersion.toString);
-		writeln("\tKeyColor:\t", i.ExtensionArea.KeyColor);
-		writeln("\tAspectRatio:\t", i.ExtensionArea.AspectRatio.toString);
-		writeln("\tGamma:\t", i.ExtensionArea.Gamma.toString);
+	writeln("Is new TGA?: ", i.isNew);
+//	if(i.isNew) {
+//		writefln("\tExtenionAreaOffset:\t0x%x", i.ExtensionAreaOffset);
+//		writefln("\tDeveloperDirectoryOffset:\t0x%x", i.DeveloperDirectoryOffset);
+//		writeln("ExtensionArea:");
+//		writeln("\tSize:\t", i.ExtensionArea.Size);
+//		writeln("\tAuthorName:\t", i.ExtensionArea.AuthorName);
+//		foreach(size_t l; 0..4)
+//			writefln("\tAutorComments[%d]:\t%s",
+//				l,
+//				i.ExtensionArea.AuthorComments[l]);
+//		writeln("\tTimestamp:\t",
+//			i.ExtensionArea.Timestamp.toSimpleString);
+//		writeln("\tJobName:\t", i.ExtensionArea.JobName);
+//		writeln("\tJobTime:\t", i.ExtensionArea.JobTime.toString);
+//		writeln("\tSoftwareID:\t", i.ExtensionArea.SoftwareID);
+//		writeln("\tSoftwareVersion:\t",
+//			i.ExtensionArea.SoftwareVersion.toString);
+//		writeln("\tKeyColor:\t", i.ExtensionArea.KeyColor);
+//		writeln("\tAspectRatio:\t", i.ExtensionArea.AspectRatio.toString);
+//		writeln("\tGamma:\t", i.ExtensionArea.Gamma.toString);
 
-		writefln("\tColorCorrectionOffset:\t0x%x",
-			i.ExtensionArea.ColorCorrectionOffset);
-		writefln("\tPostageStampOffset:\t0x%x",
-			i.ExtensionArea.PostageStampOffset);
-		writefln("\tScanLineOffset:\t0x%x",
-			i.ExtensionArea.ScanLineOffset);
-		writeln("\tAttributesType:\t",
-			i.ExtensionArea.AttributesType);
+//		writefln("\tColorCorrectionOffset:\t0x%x",
+//			i.ExtensionArea.ColorCorrectionOffset);
+//		writefln("\tPostageStampOffset:\t0x%x",
+//			i.ExtensionArea.PostageStampOffset);
+//		writefln("\tScanLineOffset:\t0x%x",
+//			i.ExtensionArea.ScanLineOffset);
+//		writeln("\tAttributesType:\t",
+//			i.ExtensionArea.AttributesType);
 
-		if(i.ExtensionArea.ScanLineOffset != 0) {
-			writeln("ScanLineTable:");
-			foreach(ref f; i.ScanLineTable)
-				writeln("\t", f);
-		}
-	}
+//		if(i.ExtensionArea.ScanLineOffset != 0) {
+//			writeln("ScanLineTable:");
+//			foreach(ref f; i.ScanLineTable)
+//				writeln("\t", f);
+//		}
+//	}
 }

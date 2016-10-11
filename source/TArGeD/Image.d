@@ -169,6 +169,37 @@ class Image {
 		this.ImagePixels = data;
 	}
 
+	@property ubyte PixelDepth() {
+		return this.ImageHeader.PixelDepth;
+	}
+
+	@property void PixelDepth(ubyte depth) {
+		this.ImageHeader.PixelDepth = depth;
+	}
+
+	@property Pixel[] ColourMap() {
+		return this.ImageColourMap;
+	}
+
+	@property void ColourMap(Pixel[] data) {
+		this.ImageColourMap = data;
+	}
+
+	bool isColourMapped() {
+		return this.ImageHeader.ColourMapType
+			== TGAColourMapType.NOT_PRESENT
+				? false
+				: true;
+	}
+
+	@property ubyte ColourMapDepth() {
+		return this.ImageHeader.ColourMapDepth;
+	}
+
+	@property void ColourMapDepth(ubyte depth) {
+		this.ImageHeader.ColourMapDepth = depth;
+	}
+
 	@property OUT ID(OUT)()
 	if(isImplicitlyConvertible!(ubyte[], OUT)) {
 		return cast(OUT) this.ImageID;
@@ -206,5 +237,23 @@ class Image {
 	@property void Height(ushort height) {
 		this.ImageHeader.Height = height;
 	}
+
+	@property ushort XOrigin() {
+		return this.ImageHeader.XOrigin;
+	}
+
+	@property void XOrigin(ushort xorigin) {
+		this.ImageHeader.XOrigin = xorigin;
+	}
+
+	@property ushort YOrigin() {
+		return this.ImageHeader.YOrigin;
+	}
+
+	@property void YOrigin(ushort yorigin) {
+		this.ImageHeader.YOrigin = yorigin;
+	}
+
+	
 }
 
