@@ -6,9 +6,8 @@ module TArGeD.Defines;
 import std.datetime : DateTime, TimeOfDay;
 import std.array : appender;
 import std.format : formattedWrite;
-import std.stdio;
+import std.stdio : File, SEEK_CUR, SEEK_SET;
 import TArGeD.Util;
-import std.array;
 
 class TArGeDException : Exception {
 	pure nothrow @nogc @safe this(string msg,

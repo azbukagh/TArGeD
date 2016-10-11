@@ -2,8 +2,9 @@ module TArGeD.Image;
 
 import TArGeD.Defines;
 import TArGeD.Util;
-import std.stdio;
+import std.stdio : File, SEEK_CUR, SEEK_END;
 import std.traits : isArray, isImplicitlyConvertible;
+import std.datetime : DateTime, TimeOfDay;
 
 class Image {
 	private {
@@ -14,7 +15,6 @@ class Image {
 		uint ImageExtAreaOffset;
 		uint ImageDevDirOffset;
 		TGAExtensionArea ImageExtArea;
-		uint[] ImageScanLineTable;
 
 		bool isImageNewFormat;
 	}
@@ -252,6 +252,78 @@ class Image {
 
 	@property void YOrigin(ushort yorigin) {
 		this.ImageHeader.YOrigin = yorigin;
+	}
+
+	@property char[40] AuthorName() {
+		return this.ImageExtArea.AuthorName;
+	}
+
+	@property void AuthorName(char[40] name) {
+		this.ImageExtArea.AuthorName = name;
+	}
+
+	@property char[80][4] AuthorComments() {
+		return this.ImageExtArea.AuthorComments;
+	}
+
+	@property void AuthorComments(char[80][4] comments) {
+		this.ImageExtArea.AuthorComments = comments;
+	}
+
+	@property DateTime Timestamp() {
+		return this.ImageExtArea.Timestamp;
+	}
+
+	@property void Timestamp(DateTime time) {
+		this.ImageExtArea.Timestamp = time;
+	}
+
+	@property char[40] JobName() {
+		return this.ImageExtArea.JobName;
+	}
+
+	@property void JobName(char[40] name) {
+		this.ImageExtArea.JobName = name;
+	}
+
+	@property TimeOfDay JobTime() {
+		return this.ImageExtArea.JobTime;
+	}
+
+	@property void JobName(TimeOfDay time) {
+		this.ImageExtArea.JobTime = time;
+	}
+
+	@property char[40] SoftwareID() {
+		return this.ImageExtArea.SoftwareID;
+	}
+
+	@property void SoftwareID(char[40] id) {
+		this.ImageExtArea.SoftwareID = id;
+	}
+
+	@property TGAVersion SoftwareVersion() {
+		return this.ImageExtArea.SoftwareVersion;
+	}
+
+	@property void SoftwareVersion(TGAVersion ver) {
+		this.ImageExtArea.SoftwareVersion = ver;
+	}
+
+	@property TGARatio AspectRatio() {
+		return this.ImageExtArea.AspectRatio;
+	}
+
+	@property void AspectRatio(TGARatio r) {
+		this.ImageExtArea.AspectRatio = r;
+	}
+
+	@property TGAGamma Gamma() {
+		return this.ImageExtArea.Gamma;
+	}
+
+	@property void Gamma(TGAGamma gamma) {
+		this.ImageExtArea.Gamma = gamma;
 	}
 }
 
