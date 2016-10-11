@@ -20,9 +20,9 @@ class TArGeDException : Exception {
 }
 
 /**
-*	Is color map presented?
+*	Is colour map presented?
 */
-enum ColorMapType : ubyte { 
+enum TGAColourMapType : ubyte { 
 	NOT_PRESENT	= 0,
 	PRESENT	= 1
 }
@@ -30,13 +30,13 @@ enum ColorMapType : ubyte {
 /**
 *	Image type
 */
-enum ImageType : ubyte {
+enum TGAImageType : ubyte {
 	NO_DATA	= 0,
-	UNCOMPRESSED_MAPPED	= 1,	/// Uncompressed, color map presented
-	UNCOMPRESSED_TRUECOLOR	= 2,	/// Uncompressed, color map not presented
+	UNCOMPRESSED_MAPPED	= 1,	/// Uncompressed, colour map presented
+	UNCOMPRESSED_TRUECOLOR	= 2,	/// Uncompressed, colour map not presented
 	UNCOMPRESSED_GRAYSCALE	= 3,	/// Uncompressed, black and white
-	COMPRESSED_MAPPED	= 9,	/// RLE encoded, color map presented
-	COMPRESSED_TRUECOLOR	= 10,	/// RLE encoded, color map not presented
+	COMPRESSED_MAPPED	= 9,	/// RLE encoded, colour map presented
+	COMPRESSED_TRUECOLOR	= 10,	/// RLE encoded, colour map not presented
 	COMPRESSED_GRAYSCALE	= 11	/// RLE encoded, black and white
 }
 
@@ -45,11 +45,11 @@ enum ImageType : ubyte {
 */
 struct TGAHeader {
 	ubyte IDLength;	/// Length of `Image.ID`
-	ColorMapType CMapType;	/// Type of color map
-	ImageType IType;	/// Type of the image
-	ushort CMapOffset;	/// Index of first color map entry
-	ushort CMapLength;	/// Number of color map entries
-	ubyte CMapDepth;	/// Number of bits per color map entry
+	TGAColourMapType ColourMapType;	/// Type of colour map
+	TGAImageType ImageType;	/// Type of the image
+	ushort ColourMapOffset;	/// Index of first colour map entry
+	ushort ColourMapLength;	/// Number of colour map entries
+	ubyte ColourMapDepth;	/// Number of bits per colour map entry
 	ushort XOrigin;	/// horizontal coordinate for the lower left corner of the image
 	ushort YOrigin;	/// vertical coordinate for the lower left corner of the image
 	ushort Width;	/// Width of the image in pixels
@@ -66,23 +66,23 @@ struct TGAHeader {
 	*		pixeldepth	= number of bits per pixel
 	*		xorig	= horizontal coordinate for the lower left corner of the image
 	*		yorig	= vertical coordinate for the lower left corner of the image
-	*		colormapdepth	= number of bits per color map entry
+	*		colourmapdepth	= number of bits per colour map entry
 	*/
-	this(ImageType i,
+	this(TGAImageType i,
 		ushort width,
 		ushort height,
 		ubyte pixeldepth = 32,
 		ushort xorig = 0,
 		ushort yorig = 0,
-		ubyte colormapdepth = 0) {
-			this.IType = i;
-			switch(this.IType) with(ImageType) {
+		ubyte colourmapdepth = 0) {
+			this.ImageType = i;
+			switch(this.ImageType) with(TGAImageType) {
 				case UNCOMPRESSED_MAPPED:
 				case COMPRESSED_MAPPED:
-					this.CMapType = ColorMapType.PRESENT;
+					this.ColourMapType = TGAColourMapType.PRESENT;
 					break;
 				default:
-					this.CMapType = ColorMapType.NOT_PRESENT;
+					this.ColourMapType = TGAColourMapType.NOT_PRESENT;
 					break;
 			}
 			this.Width = width;
@@ -90,7 +90,7 @@ struct TGAHeader {
 			this.PixelDepth = pixeldepth;
 			this.XOrigin = xorig;
 			this.YOrigin = yorig;
-			this.CMapDepth = colormapdepth;
+			this.ColourMapDepth = colourmapdepth;
 		}
 
 	/**
@@ -99,11 +99,15 @@ struct TGAHeader {
 	this(ref File f) {
 		f.seek(0, SEEK_SET);
 		this.IDLength	= f.readFile!(typeof(TGAHeader.IDLength));
-		this.CMapType	= f.readFile!(typeof(TGAHeader.CMapType));
-		this.IType	= f.readFile!(typeof(TGAHeader.IType));
-		this.CMapOffset	= f.readFile!(typeof(TGAHeader.CMapOffset));
-		this.CMapLength	= f.readFile!(typeof(TGAHeader.CMapLength));
-		this.CMapDepth	= f.readFile!(typeof(TGAHeader.CMapDepth));
+		this.ColourMapType	=
+			f.readFile!(typeof(TGAHeader.ColourMapType));
+		this.ImageType	= f.readFile!(typeof(TGAHeader.ImageType));
+		this.ColourMapOffset	=
+			f.readFile!(typeof(TGAHeader.ColourMapOffset));
+		this.ColourMapLength	=
+			f.readFile!(typeof(TGAHeader.ColourMapLength));
+		this.ColourMapDepth	=
+			f.readFile!(typeof(TGAHeader.ColourMapDepth));
 		this.XOrigin	= f.readFile!(typeof(TGAHeader.XOrigin));
 		this.YOrigin	= f.readFile!(typeof(TGAHeader.YOrigin));
 		this.Width	= f.readFile!(typeof(TGAHeader.Width));
@@ -255,10 +259,10 @@ struct TGAExtensionArea {
 	TimeOfDay JobTime;	/// Job elapsed time when image was saved
 	char[40] SoftwareID;	/// Name of program, which created this image
 	TGAVersion SoftwareVersion;	/// Version of program
-	uint KeyColor;	/// Background color. TODO
+	uint KeyColour;	/// Background colour. TODO
 	TGARatio AspectRatio;	/// Aspect ratio
 	TGAGamma Gamma;	/// Gamma value
-	uint ColorCorrectionOffset;	/// Offset of color correction table
+	uint ColourCorrectionOffset;	/// Offset of colour correction table
 	uint PostageStampOffset;	/// Offset of postage stamp image
 	uint ScanLineOffset;	/// Offset of scan line table
 	ubyte AttributesType; /// Type of alpha channel
@@ -303,13 +307,13 @@ struct TGAExtensionArea {
 		this.SoftwareID	=
 			f.rawRead(new char[41])[0..40];
 		this.SoftwareVersion	= TGAVersion(f);
-		this.KeyColor	=
-			f.readFile!(typeof(TGAExtensionArea.KeyColor));
+		this.KeyColour	=
+			f.readFile!(typeof(TGAExtensionArea.KeyColour));
 		this.AspectRatio	= TGARatio(f);
 		this.Gamma	= TGAGamma(f);
 
-		this.ColorCorrectionOffset	=
-			f.readFile!(typeof(TGAExtensionArea.ColorCorrectionOffset));
+		this.ColourCorrectionOffset	=
+			f.readFile!(typeof(TGAExtensionArea.ColourCorrectionOffset));
 		this.PostageStampOffset	=
 			f.readFile!(typeof(TGAExtensionArea.PostageStampOffset));
 		this.ScanLineOffset	=
