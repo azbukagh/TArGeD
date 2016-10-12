@@ -192,6 +192,27 @@ class Image {
 				: true;
 	}
 
+	void isColourMapped(bool v) {
+		switch(this.ImageHeader.ImageType) with (TGAImageType) {
+			case UNCOMPRESSED_TRUECOLOR:
+			case UNCOMPRESSED_GRAYSCALE:
+				this.ImageHeader.ImageType =
+					TGAImageType.UNCOMPRESSED_MAPPED;
+				break;
+			
+			case COMPRESSED_TRUECOLOR:
+			case COMPRESSED_GRAYSCALE:
+				this.ImageHeader.ImageType =
+					TGAImageType.COMPRESSED_MAPPED;
+				break;
+			default:
+				break;
+		}
+		this.ImageHeader.ColourMapType = v
+			? TGAColourMapType.PRESENT
+			: TGAColourMapType.NOT_PRESENT;
+	}
+
 	@property ubyte ColourMapDepth() {
 		return this.ImageHeader.ColourMapDepth;
 	}
@@ -212,6 +233,7 @@ class Image {
 			assert(data.length >= ubyte.max);
 	} body {
 		this.ImageID = cast(ubyte[]) data;
+		this.ImageHeader.IDLength = this.ImageID.length;
 	}
 
 	@property TGAImageType ImageType() {
@@ -219,6 +241,22 @@ class Image {
 	}
 
 	@property void ImageType(TGAImageType imagetype) {
+		switch(imagetype) with (TGAImageType) {
+			case COMPRESSED_TRUECOLOR:
+			case COMPRESSED_GRAYSCALE:
+			case UNCOMPRESSED_TRUECOLOR:
+			case UNCOMPRESSED_GRAYSCALE:
+				this.ImageHeader.ColourMapType =
+					TGAColourMapType.NOT_PRESENT;
+				break;
+			case UNCOMPRESSED_MAPPED:
+			case COMPRESSED_MAPPED:
+				this.ImageHeader.ColourMapType =
+					TGAColourMapType.PRESENT;
+				break;
+			default:
+				break;
+		}
 		this.ImageHeader.ImageType = imagetype;
 	}
 
@@ -345,6 +383,8 @@ class Image {
 	}
 
 	@property void Gamma(TGAGamma gamma) {
+		if(!gamma.isCorrect)
+			throw new TArGeDException("Gamma value is invalid");
 		this.ImageExtArea.Gamma = gamma;
 	}
 }
