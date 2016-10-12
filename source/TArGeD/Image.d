@@ -254,20 +254,38 @@ class Image {
 		this.ImageHeader.YOrigin = yorigin;
 	}
 
-	@property char[40] AuthorName() {
-		return this.ImageExtArea.AuthorName;
+	@property OUT AuthorName(OUT = char[40])() 
+	if(isImplicitlyConvertible!(char[40], OUT)) {
+		return cast(OUT) this.ImageExtArea.AuthorName;
 	}
 
-	@property void AuthorName(char[40] name) {
-		this.ImageExtArea.AuthorName = name;
+	@property void AuthorName(IN)(IN name) 
+	if(isImplicitlyConvertible!(IN, char[40])) {
+		this.ImageExtArea.AuthorName = cast(char[40]) name;
 	}
 
-	@property char[80][4] AuthorComments() {
-		return this.ImageExtArea.AuthorComments;
+	@property OUT AuthorComments(OUT = char[80][4])() {
+		return cast(OUT) this.ImageExtArea.AuthorComments;
 	}
 
-	@property void AuthorComments(char[80][4] comments) {
-		this.ImageExtArea.AuthorComments = comments;
+	@property OUT AuthorComments(OUT = char[80])(size_t i) 
+	in {
+		assert(i <= 3);
+	} body {
+		return this.ImageExtArea.AuthorComments[i];
+	}
+
+	@property void AuthorComments(IN)(IN comments)
+	if(isImplicitlyConvertible!(IN, char[80][4])) {
+		this.ImageExtArea.AuthorComments = cast(char[80][4]) comments;
+	}
+
+	@property void AuthorComments(IN)(IN comments, size_t i)
+	in {
+		assert(isImplicitlyConvertible!(IN, char[80]));
+		assert(i <= 3);
+	} body {
+		this.ImageExtArea.AuthorComments[i] = cast(char[80]) comments;
 	}
 
 	@property DateTime Timestamp() {
@@ -278,28 +296,32 @@ class Image {
 		this.ImageExtArea.Timestamp = time;
 	}
 
-	@property char[40] JobName() {
-		return this.ImageExtArea.JobName;
+	@property OUT JobName(OUT = char[40])() 
+	if(isImplicitlyConvertible!(char[40], OUT)) {
+		return cast(OUT) this.ImageExtArea.JobName;
 	}
 
-	@property void JobName(char[40] name) {
-		this.ImageExtArea.JobName = name;
+	@property void JobName(IN)(IN name) 
+	if(isImplicitlyConvertible!(IN, char[40])) {
+		this.ImageExtArea.JobName = cast(char[40]) name;
 	}
 
 	@property TimeOfDay JobTime() {
 		return this.ImageExtArea.JobTime;
 	}
 
-	@property void JobName(TimeOfDay time) {
+	@property void JobTime(TimeOfDay time) {
 		this.ImageExtArea.JobTime = time;
 	}
 
-	@property char[40] SoftwareID() {
-		return this.ImageExtArea.SoftwareID;
+	@property OUT SoftwareID(OUT = char[40])() 
+	if(isImplicitlyConvertible!(char[40], OUT)) {
+		return cast(OUT) this.ImageExtArea.SoftwareID;
 	}
 
-	@property void SoftwareID(char[40] id) {
-		this.ImageExtArea.SoftwareID = id;
+	@property void SoftwareID(IN)(IN id) 
+	if(isImplicitlyConvertible!(IN, char[40])) {
+		this.ImageExtArea.SoftwareID = cast(char[40]) id;
 	}
 
 	@property TGAVersion SoftwareVersion() {
