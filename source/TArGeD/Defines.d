@@ -161,6 +161,11 @@ struct TGAVersion {
 			this.Letter);
 		return a.data;
 	}
+
+	void write(ref File f) {
+		f.writeToFile(cast(ushort) (this.Number * 100));
+		f.writeToFile(this.Letter);
+	}
 }
 
 /**
@@ -205,6 +210,11 @@ struct TGARatio {
 	*/
 	bool isPresented() {
 		return this.Denominator != 0;
+	}
+
+	void write(ref File f) {
+		f.writeToFile(this.Numerator);
+		f.writeToFile(this.Denominator);
 	}
 }
 
@@ -258,6 +268,11 @@ struct TGAGamma {
 	bool isCorrect() {
 		return (this.Numerator <= 10 && this.Denominator == 0) ||
 			(this.Numerator < 10);
+	}
+
+	void write(ref File f) {
+		f.writeToFile(this.Numerator);
+		f.writeToFile(this.Denominator);
 	}
 }
 

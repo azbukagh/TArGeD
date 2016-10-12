@@ -4,7 +4,7 @@
 module TArGeD.Util;
 
 import std.stdio : File;
-import std.bitmanip : littleEndianToNative;
+import std.bitmanip : littleEndianToNative, nativeToLittleEndian;
 import std.algorithm : min;
 
 T readFromFile(T)(ref File f) {
@@ -20,7 +20,7 @@ T readFromArray(T)(ubyte[] data) {
 	return littleEndianToNative!T(o);
 }
 
-T writeToFile(T)(ref File f, T data) {
+void writeToFile(T)(ref File f, T data) {
 	ubyte[T.sizeof] buffer = nativeToLittleEndian!T(data);
 	f.rawWrite(buffer);
 }
