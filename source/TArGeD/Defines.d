@@ -115,6 +115,21 @@ struct TGAHeader {
 		this.ImageDescriptor	=
 			f.readFromFile!(typeof(TGAHeader.ImageDescriptor));
 	}
+
+	void write(ref File f) {
+		f.writeToFile(this.IDLength);
+		f.writeToFile(this.ColourMapType);
+		f.writeToFile(this.ImageType);
+		f.writeToFile(this.ColourMapOffset);
+		f.writeToFile(this.ColourMapLength);
+		f.writeToFile(this.ColourMapDepth);
+		f.writeToFile(this.XOrigin);
+		f.writeToFile(this.YOrigin);
+		f.writeToFile(this.Width);
+		f.writeToFile(this.Height);
+		f.writeToFile(this.PixelDepth);
+		f.writeToFile(this.ImageDescriptor);
+	}
 }
 
 /**
