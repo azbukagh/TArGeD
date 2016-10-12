@@ -97,23 +97,23 @@ struct TGAHeader {
 	*/
 	this(ref File f) {
 		f.seek(0, SEEK_SET);
-		this.IDLength	= f.readFile!(typeof(TGAHeader.IDLength));
+		this.IDLength	= f.readFromFile!(typeof(TGAHeader.IDLength));
 		this.ColourMapType	=
-			f.readFile!(typeof(TGAHeader.ColourMapType));
-		this.ImageType	= f.readFile!(typeof(TGAHeader.ImageType));
+			f.readFromFile!(typeof(TGAHeader.ColourMapType));
+		this.ImageType	= f.readFromFile!(typeof(TGAHeader.ImageType));
 		this.ColourMapOffset	=
-			f.readFile!(typeof(TGAHeader.ColourMapOffset));
+			f.readFromFile!(typeof(TGAHeader.ColourMapOffset));
 		this.ColourMapLength	=
-			f.readFile!(typeof(TGAHeader.ColourMapLength));
+			f.readFromFile!(typeof(TGAHeader.ColourMapLength));
 		this.ColourMapDepth	=
-			f.readFile!(typeof(TGAHeader.ColourMapDepth));
-		this.XOrigin	= f.readFile!(typeof(TGAHeader.XOrigin));
-		this.YOrigin	= f.readFile!(typeof(TGAHeader.YOrigin));
-		this.Width	= f.readFile!(typeof(TGAHeader.Width));
-		this.Height	= f.readFile!(typeof(TGAHeader.Height));
-		this.PixelDepth	= f.readFile!(typeof(TGAHeader.PixelDepth));
+			f.readFromFile!(typeof(TGAHeader.ColourMapDepth));
+		this.XOrigin	= f.readFromFile!(typeof(TGAHeader.XOrigin));
+		this.YOrigin	= f.readFromFile!(typeof(TGAHeader.YOrigin));
+		this.Width	= f.readFromFile!(typeof(TGAHeader.Width));
+		this.Height	= f.readFromFile!(typeof(TGAHeader.Height));
+		this.PixelDepth	= f.readFromFile!(typeof(TGAHeader.PixelDepth));
 		this.ImageDescriptor	=
-			f.readFile!(typeof(TGAHeader.ImageDescriptor));
+			f.readFromFile!(typeof(TGAHeader.ImageDescriptor));
 	}
 }
 
@@ -133,7 +133,7 @@ struct TGAVersion {
 	}
 	/// ditto
 	this(ref File f) {
-		this(f.readFile!(ushort), f.readFile!(char));
+		this(f.readFromFile!(ushort), f.readFromFile!(char));
 	}
 
 	/**
@@ -170,7 +170,7 @@ struct TGARatio {
 	}
 
 	this(ref File f) {
-		this(f.readFile!(ushort), f.readFile!(ushort));
+		this(f.readFromFile!(ushort), f.readFromFile!(ushort));
 	}
 
 
@@ -215,7 +215,7 @@ struct TGAGamma {
 	}
 
 	this(ref File f) {
-		this(f.readFile!(ushort), f.readFile!(ushort));
+		this(f.readFromFile!(ushort), f.readFromFile!(ushort));
 	}
 
 	/**
@@ -269,7 +269,7 @@ struct TGAExtensionArea {
 	this(ref File f, uint extAreaOff) {
 		f.seek(extAreaOff, SEEK_SET);
 		this.Size	=
-			f.readFile!(typeof(TGAExtensionArea.Size));
+			f.readFromFile!(typeof(TGAExtensionArea.Size));
 		if(this.Size != 495) {
 			throw new TArGeDException("Bad ExtensionArea size");
 		}
@@ -279,12 +279,12 @@ struct TGAExtensionArea {
 			this.AuthorComments[i]	=
 				f.rawRead(new char[81])[0..80];
 		ushort Month, Day, Year, Hour, Minute, Second;
-		Month	= f.readFile!(ushort);
-		Day	= f.readFile!(ushort);
-		Year	= f.readFile!(ushort);
-		Hour	= f.readFile!(ushort);
-		Minute	= f.readFile!(ushort);
-		Second	= f.readFile!(ushort);
+		Month	= f.readFromFile!(ushort);
+		Day	= f.readFromFile!(ushort);
+		Year	= f.readFromFile!(ushort);
+		Hour	= f.readFromFile!(ushort);
+		Minute	= f.readFromFile!(ushort);
+		Second	= f.readFromFile!(ushort);
 		if((Year && Month && Day) != 0)
 			this.Timestamp = DateTime(Year,
 				Month,
@@ -296,9 +296,9 @@ struct TGAExtensionArea {
 			f.rawRead(new char[41])[0..40];
 
 		ushort H, M, S;
-		H	= f.readFile!(ushort);
-		M	= f.readFile!(ushort);
-		S	= f.readFile!(ushort);
+		H	= f.readFromFile!(ushort);
+		M	= f.readFromFile!(ushort);
+		S	= f.readFromFile!(ushort);
 		if((H && M && S) != 0)
 			this.JobTime	= TimeOfDay(H, M, S);
 
@@ -307,24 +307,24 @@ struct TGAExtensionArea {
 			f.rawRead(new char[41])[0..40];
 		this.SoftwareVersion	= TGAVersion(f);
 		this.KeyColour	=
-			f.readFile!(typeof(TGAExtensionArea.KeyColour));
+			f.readFromFile!(typeof(TGAExtensionArea.KeyColour));
 		this.AspectRatio	= TGARatio(f);
 		this.Gamma	= TGAGamma(f);
 
 		this.ColourCorrectionOffset	=
-			f.readFile!(typeof(TGAExtensionArea.ColourCorrectionOffset));
+			f.readFromFile!(typeof(TGAExtensionArea.ColourCorrectionOffset));
 		this.PostageStampOffset	=
-			f.readFile!(typeof(TGAExtensionArea.PostageStampOffset));
+			f.readFromFile!(typeof(TGAExtensionArea.PostageStampOffset));
 		this.ScanLineOffset	=
-			f.readFile!(typeof(TGAExtensionArea.ScanLineOffset));
+			f.readFromFile!(typeof(TGAExtensionArea.ScanLineOffset));
 		this.AttributesType	=
-			f.readFile!(typeof(TGAExtensionArea.AttributesType));
+			f.readFromFile!(typeof(TGAExtensionArea.AttributesType));
 
 //		if(this.ScanLineOffset != 0) {
 //			f.seek(this.ExtensionArea.ScanLineOffset, SEEK_SET);
 //			this.ScanLineTable.length = this.Header.Height;
 //			foreach(ref i; this.ScanLineTable)
-//				i	= f.readFile!(typeof(ScanLineTable[0]));
+//				i	= f.readFromFile!(typeof(ScanLineTable[0]));
 //		}
 	}
 }
@@ -395,6 +395,37 @@ struct Pixel {
 		this.G = data[0];
 		this.B = data[0];
 		this.A = 0xFF;
+	}
+
+	ubyte[4] to32() {
+		return [
+			this.B,
+			this.G,
+			this.R,
+			this.A
+		];
+	}
+
+	ubyte[3] to24() {
+		return [
+			this.B,
+			this.G,
+			this.R
+		];
+	}
+
+	ubyte[2] to16() {
+		return [
+			cast(ubyte) ((this.G << 2) | (this.B >> 3)),
+			cast(ubyte) ((this.A & 0x80) |
+				(this.R >> 1) | (this.G >> 6))
+		];
+	}
+
+	ubyte[1] to8() {
+		return [
+			cast(ubyte) (this.R + this.G + this.B) / 3
+		];
 	}
 }
 

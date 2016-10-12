@@ -47,8 +47,8 @@ class Image {
 		f.rawRead(buf);
 		this.isNew = (buf[8..24] == "TRUEVISION-XFILE" && buf[24] == '.');
 		if(this.isNew) {
-			extAreaOff = readArray!uint(buf[0..4]);
-			devDirOff = readArray!uint(buf[4..8]);
+			extAreaOff = readFromArray!uint(buf[0..4]);
+			devDirOff = readFromArray!uint(buf[4..8]);
 		}
 	}
 
@@ -109,7 +109,7 @@ class Image {
 		out Pixel[] pixels) {
 			auto r = (hdr.ColourMapType == TGAColourMapType.PRESENT)
 				? delegate (ubyte[] d) =>
-					colourMap[readArray!uint(d)]
+					colourMap[readFromArray!uint(d)]
 				: delegate (ubyte[] d) =>
 					Pixel(d);
 			pixels.length = hdr.Width * hdr.Height;	// TODO ALLOC
@@ -127,7 +127,7 @@ class Image {
 		out Pixel[] pixels) {
 			auto r = (hdr.ColourMapType == TGAColourMapType.PRESENT)
 				? delegate (ubyte[] d) =>
-					colourMap[readArray!uint(d)]
+					colourMap[readFromArray!uint(d)]
 				: delegate (ubyte[] d) =>
 					Pixel(d);
 		pixels.length = hdr.Width * hdr.Height;	// TODO ALLOC
