@@ -19,6 +19,28 @@ class Image {
 		bool isImageNewFormat;
 	}
 
+	void write(string filename) {
+		this.write(File(filename, "wb"));
+	}
+
+	void write(File f) {
+		if(this.isColourMapped) {
+			this.ImageHeader.ColourMapOffset = TGAHeader.sizeof +
+				this.ImageHeader.IDLength;
+		} else {
+			with(this.ImageHeader) {
+				ColourMapLength = 0;
+				ColourMapOffset = 0;
+				ColourMapDepth = 0;
+			}
+		}
+		this.ImageHeader.write(f);
+//		if(this.isColourMapped)
+//			this.writeColourMap(f,
+//				this.ImageHeader,
+//				this.ImageColourMap);
+	}
+
 	this(string filename) {
 		this(File(filename, "rb"));
 	}
@@ -59,9 +81,8 @@ class Image {
 	}
 
 	private void readColourMap(ref File f, ref TGAHeader hdr, out Pixel[] CMap) {
-			if(hdr.ColourMapType == TGAColourMapType.NOT_PRESENT) {
+			if(!this.isColourMapped)
 				return;
-			}
 
 			CMap.length = hdr.ColourMapLength;	// TODO allocate it with std.experimental.allocator
 
@@ -107,7 +128,7 @@ class Image {
 		ref TGAHeader hdr,
 		ref Pixel[] colourMap,
 		out Pixel[] pixels) {
-			auto r = (hdr.ColourMapType == TGAColourMapType.PRESENT)
+			auto r = (this.isColourMapped)
 				? delegate (ubyte[] d) =>
 					colourMap[readFromArray!uint(d)]
 				: delegate (ubyte[] d) =>
@@ -125,7 +146,7 @@ class Image {
 		ref TGAHeader hdr,
 		ref Pixel[] colourMap,
 		out Pixel[] pixels) {
-			auto r = (hdr.ColourMapType == TGAColourMapType.PRESENT)
+			auto r = (this.isColourMapped)
 				? delegate (ubyte[] d) =>
 					colourMap[readFromArray!uint(d)]
 				: delegate (ubyte[] d) =>
@@ -181,8 +202,14 @@ class Image {
 		return this.ImageColourMap;
 	}
 
-	@property void ColourMap(Pixel[] data) {
+	@property void ColourMap(Pixel[] data)
+	in {
+		assert(data.length <= TGAHeader.ColourMapLength.max);
+	} body {
 		this.ImageColourMap = data;
+		this.ImageHeader.ColourMapLength =
+			cast(typeof(TGAHeader.ColourMapLength))
+				this.ImageColourMap.length;
 	}
 
 	bool isColourMapped() {
