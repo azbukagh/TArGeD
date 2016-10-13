@@ -382,9 +382,10 @@ class Image {
 		return this.ImageExtArea.Gamma;
 	}
 
-	@property void Gamma(TGAGamma gamma) {
-		if(!gamma.isCorrect)
-			throw new TArGeDException("Gamma value is invalid");
+	@property void Gamma(TGAGamma gamma) 
+	in {
+		assert(gamma.isCorrect, "Gamma value is invalid");
+	} body {
 		this.ImageExtArea.Gamma = gamma;
 	}
 }
