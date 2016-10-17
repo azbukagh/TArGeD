@@ -7,6 +7,7 @@ TODO:
 - [] Extension area writer
 - [] Developer fields writer
 - [] Tests
+- [] Optimization
 - [] Documentation
 - [] Examples
 
