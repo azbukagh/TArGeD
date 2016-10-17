@@ -5,5 +5,15 @@
 	],
 	"description": "Truevision TGA image format library",
 	"copyright": "Copyright © 2016, Azbuka",
-	"license": "MIT"
+	"license": "MIT",
+	"buildTypes": {
+		"doc": {
+			"buildOptions": ["syntaxOnly"],
+			"dflags": ["-c", "-Xfdocs.json"],
+			"postBuildCommands": [
+				"dub run whammydoc -- generate-html docs.json ../azbukagh.github.io/targed",
+				"rm docs.json __dummy.html"
+			]
+		}
+	}
 }
