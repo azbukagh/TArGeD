@@ -346,6 +346,10 @@ class Image {
 		return this.ImageHeader.IDLength != 0;
 	}
 
+	bool hasExtesionArea() {
+		return this.ImageExtAreaOffset != 0;
+	}
+
 	@property TGAImageType ImageType() {
 		return this.ImageHeader.ImageType;
 	}
