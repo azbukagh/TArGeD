@@ -5,6 +5,9 @@ import TArGeD.Util;
 import std.stdio : File, SEEK_CUR, SEEK_END;
 import std.traits : isArray, isImplicitlyConvertible;
 import std.datetime : DateTime, TimeOfDay;
+import std.algorithm;
+import std.conv;
+import std.range;
 
 class Image {
 	private {
@@ -19,136 +22,233 @@ class Image {
 		bool isImageNewFormat;
 	}
 
+	void write(string filename) {
+		this.write(File(filename, "wb"));
+	}
+
+	void write(File f) {
+		if(this.isColourMapped) {
+			this.ImageHeader.ColourMapOffset = TGAHeader.sizeof +
+				this.ImageHeader.IDLength;
+		} else {
+			with(this.ImageHeader) {
+				ColourMapLength = 0;
+				ColourMapOffset = 0;
+				ColourMapDepth = 0;
+			}
+		}
+		this.ImageHeader.write(f);
+		if(this.hasID)
+			this.writeID(f);
+		if(this.isColourMapped)
+			this.writeColourMap(f);
+		this.writePixelData(f);
+	}
+
 	this(string filename) {
 		this(File(filename, "rb"));
 	}
 
 	this(File f) {
-		this.readFooter(f,
-			this.ImageExtAreaOffset,
-			this.ImageDevDirOffset);
+		this.readFooter(f);
 		this.ImageHeader = TGAHeader(f);
-		this.readID(f, this.ImageHeader.IDLength, this.ImageID);
-		this.readColourMap(f,
-			this.ImageHeader,
-			this.ImageColourMap);
-		this.readPixelData(f,
-			this.ImageHeader,
-			this.ImageColourMap,
-			this.ImagePixels);
+		this.readID(f);
+		this.readColourMap(f);
+		this.readPixelData(f);
 		if(this.isNew && (this.ImageExtAreaOffset != 0))
 			this.ImageExtArea = TGAExtensionArea(f,
 				this.ImageExtAreaOffset);
 	}
 
-	private void readFooter(ref File f, out uint extAreaOff, out uint devDirOff) {
+	private void readFooter(ref File f) {
 		f.seek(-26, SEEK_END);
 		ubyte[26] buf;
 		f.rawRead(buf);
 		this.isNew = (buf[8..24] == "TRUEVISION-XFILE" && buf[24] == '.');
 		if(this.isNew) {
-			extAreaOff = readFromArray!uint(buf[0..4]);
-			devDirOff = readFromArray!uint(buf[4..8]);
+			this.ImageExtAreaOffset = readFromArray!uint(buf[0..4]);
+			this.ImageDevDirOffset = readFromArray!uint(buf[4..8]);
 		}
 	}
 
-	private void readID(ref File f, ubyte idLen, out ubyte[] ImgID) {
-		if(idLen) {
-			ImgID = f.rawRead(new ubyte[idLen]);
+	private void readID(ref File f) {
+		if(this.hasID)
+			this.ImageID =
+				f.rawRead(new ubyte[this.ImageHeader.IDLength]);
+	}
+
+	private void writeID(ref File f)
+	in {
+		assert(this.hasID);
+		assert(this.ImageID.length >= this.ImageHeader.IDLength);
+	} body {
+		f.rawWrite(this.ImageID[0..this.ImageHeader.IDLength]);
+	}
+
+	private void readColourMap(ref File f) {
+		if(!this.isColourMapped)
+			return;
+
+		this.ImageColourMap.length = this.ImageHeader.ColourMapLength;	// TODO allocate it with std.experimental.allocator
+
+		f.seek(this.ImageHeader.ColourMapOffset *
+			this.ImageHeader.ColourMapDepth, SEEK_CUR);
+
+		ubyte[] buf = new ubyte[this.ImageHeader.ColourMapDepth/8];
+
+		foreach(size_t i; 0..(this.ImageHeader.ColourMapLength - this.ImageHeader.ColourMapOffset)) {
+			f.rawRead(buf);
+			this.ImageColourMap[i] = Pixel(buf);
 		}
 	}
 
-	private void readColourMap(ref File f, ref TGAHeader hdr, out Pixel[] CMap) {
-			if(hdr.ColourMapType == TGAColourMapType.NOT_PRESENT) {
-				return;
-			}
-
-			CMap.length = hdr.ColourMapLength;	// TODO allocate it with std.experimental.allocator
-
-			f.seek(hdr.ColourMapOffset * hdr.ColourMapDepth, SEEK_CUR);
-
-			ubyte[] buf = new ubyte[hdr.ColourMapDepth/8];
-
-			foreach(size_t i; 0..(hdr.ColourMapLength - hdr.ColourMapOffset)) {
-				f.rawRead(buf);
-				CMap[i] = Pixel(buf);
-			}
+	private void writeColourMap(ref File f)
+	in {
+		assert(this.isColourMapped);
+	} body {
+		foreach(ref c; this.ColourMap)
+			c.write(f, this.ImageHeader.ColourMapDepth / 8);
 	}
 
-	private void readPixelData(ref File f,
-		ref TGAHeader hdr,
-		ref Pixel[] colourMap,
-		out Pixel[] pixels) {
-			switch(hdr.ImageType) with(TGAImageType) {
-				case UNCOMPRESSED_MAPPED:
-				case UNCOMPRESSED_TRUECOLOR:
-				case UNCOMPRESSED_GRAYSCALE:
-					readUncompressedPixelData(f,
-						hdr,
-						colourMap,
-						pixels);
-					break;
-				case COMPRESSED_MAPPED:
-				case COMPRESSED_TRUECOLOR:
-				case COMPRESSED_GRAYSCALE:
-					readCompressedPixelData(f,
-						hdr,
-						colourMap,
-						pixels);
-					break;
-				default:
-					throw new TArGeDException(
-						"Wrong image type"
-					);
-			}
+	private void readPixelData(ref File f) {
+		switch(this.ImageHeader.ImageType) with(TGAImageType) {
+			case UNCOMPRESSED_MAPPED:
+			case UNCOMPRESSED_TRUECOLOR:
+			case UNCOMPRESSED_GRAYSCALE:
+				readUncompressedPixelData(f);
+				break;
+			case COMPRESSED_MAPPED:
+			case COMPRESSED_TRUECOLOR:
+			case COMPRESSED_GRAYSCALE:
+				readCompressedPixelData(f);
+				break;
+			default:
+				throw new TArGeDException("Wrong image type");
+		}
 	}
 
-	private void readUncompressedPixelData(ref File f,
-		ref TGAHeader hdr,
-		ref Pixel[] colourMap,
-		out Pixel[] pixels) {
-			auto r = (hdr.ColourMapType == TGAColourMapType.PRESENT)
-				? delegate (ubyte[] d) =>
-					colourMap[readFromArray!uint(d)]
-				: delegate (ubyte[] d) =>
-					Pixel(d);
-			pixels.length = hdr.Width * hdr.Height;	// TODO ALLOC
-
-			ubyte[] buf = new ubyte[hdr.PixelDepth/8];
-			foreach(ref p; pixels) {
-				f.rawRead(buf);
-				p = r(buf);
-			}
+	private void writePixelData(ref File f) {
+		switch(this.ImageHeader.ImageType) with(TGAImageType) {
+			case UNCOMPRESSED_MAPPED:
+			case UNCOMPRESSED_TRUECOLOR:
+			case UNCOMPRESSED_GRAYSCALE:
+				writeUncompressedPixelData(f);
+				break;
+			case COMPRESSED_MAPPED:
+			case COMPRESSED_TRUECOLOR:
+			case COMPRESSED_GRAYSCALE:
+				writeCompressedPixelData(f);
+				break;
+			default:
+				throw new TArGeDException("Wrong image type");
+		}
 	}
 
-	private void readCompressedPixelData(ref File f,
-		ref TGAHeader hdr,
-		ref Pixel[] colourMap,
-		out Pixel[] pixels) {
-			auto r = (hdr.ColourMapType == TGAColourMapType.PRESENT)
-				? delegate (ubyte[] d) =>
-					colourMap[readFromArray!uint(d)]
-				: delegate (ubyte[] d) =>
-					Pixel(d);
-		pixels.length = hdr.Width * hdr.Height;	// TODO ALLOC
+	private void readUncompressedPixelData(ref File f) {
+		auto r = (this.isColourMapped)
+			? delegate (ubyte[] d) =>
+				this.ImageColourMap[readFromArray!uint(d)]
+			: delegate (ubyte[] d) =>
+				Pixel(d);
+		this.ImagePixels.length = this.ImageHeader.Width *
+			this.ImageHeader.Height;	// TODO ALLOC
 
-		ubyte[] buf = new ubyte[hdr.PixelDepth/8+1];
+		ubyte[] buf = new ubyte[this.ImageHeader.PixelDepth/8];
+		foreach(ref p; this.ImagePixels) {
+			f.rawRead(buf);
+			p = r(buf);
+		}
+	}
+
+	private void writeUncompressedPixelData(ref File f) {
+		auto r = (this.isColourMapped)
+			? delegate (Pixel d) =>
+				f.rawWrite(
+					writeToArray(
+						f,
+						this.ImageColourMap
+							.countUntil(d)
+							.to!ushort,
+						this.ImageHeader.PixelDepth/8
+					)
+				)
+			: delegate (Pixel d) =>
+				d.write(f, this.ImageHeader.PixelDepth);
+
+		foreach(ref p; this.ImagePixels)
+			r(p);
+	}
+
+	private void readCompressedPixelData(ref File f) {
+		auto r = (this.isColourMapped)
+			? delegate (ubyte[] d) =>
+				this.ImageColourMap[readFromArray!uint(d)]
+			: delegate (ubyte[] d) =>
+				Pixel(d);
+		this.ImagePixels.length = this.ImageHeader.Width *
+			this.ImageHeader.Height;	// TODO ALLOC
+
+		ubyte[] buf = new ubyte[this.ImageHeader.PixelDepth/8+1];
 		size_t i;
-		while(i < hdr.Width * hdr.Height) {
+		while(i < this.ImageHeader.Width * this.ImageHeader.Height) {
 			f.rawRead(buf);
 			size_t rep = buf[0] & 0x7F;
-			pixels[i] = r(buf[0..hdr.PixelDepth/8]);
+			this.ImagePixels[i] =
+				r(buf[0..this.ImageHeader.PixelDepth/8]);
 			i++;
 			if(buf[0] & 0x80) {
 				for(size_t j = 0; j < rep; j++, i++)
-					pixels[i] =
-						r(buf[1 .. hdr.PixelDepth/8+1]);
+					this.ImagePixels[i] =
+						r(buf[1..this.ImageHeader.PixelDepth/8+1]);
 			} else {
 				for(size_t j=0; j < rep; j++, i++) {
-					f.rawRead(buf[0..hdr.PixelDepth/8]);
-					pixels[i] =
-						r(buf[0..hdr.PixelDepth/8]);
+					f.rawRead(buf[0..this.ImageHeader.PixelDepth/8]);
+					this.ImagePixels[i] =
+						r(buf[0..this.ImageHeader.PixelDepth/8]);
 				}
+			}
+		}
+	}
+
+	private void writeCompressedPixelData(ref File f) {
+		auto r = (this.isColourMapped)
+			? delegate (Pixel d) =>
+				f.rawWrite(
+					writeToArray(
+						f,
+						this.ImageColourMap
+							.countUntil(d)
+							.to!ushort,
+						this.ImageHeader.PixelDepth/8
+					)
+				)
+			: delegate (Pixel d) =>
+				d.write(f, this.ImageHeader.PixelDepth);
+		auto pixels = this.ImagePixels;
+		while(pixels.length) {
+			// Find the first occurrence of two equal pixels next to each other
+			auto nextPixels = pixels.findAdjacent;
+
+			// Everything before that point should be written as raw packets.
+			// Max packet size is 128 pixels so make chunks of that size
+			foreach(const ref packet; pixels[0 .. $ - nextPixels.length].chunks(128)) {
+				f.write(to!ubyte(packet.length-1));
+				foreach(const ref p; packet)
+					r(p);
+			}
+
+			// If there are more pixels in the image, the next pixels can be RLE encoded
+			if(nextPixels.length){
+				// Find the point at which the pixel data changes
+				pixels = nextPixels.find!"a!=b"(nextPixels[0]);
+
+				// Everything before that point should be written as RLE packets
+				foreach(const ref packet; nextPixels[0 .. $ - pixels.length].chunks(128)){
+					f.write(to!ubyte(packet.length-1 | 0x80));
+					r(packet[0]);
+				}
+			} else {
+				break;
 			}
 		}
 	}
@@ -181,8 +281,14 @@ class Image {
 		return this.ImageColourMap;
 	}
 
-	@property void ColourMap(Pixel[] data) {
+	@property void ColourMap(Pixel[] data)
+	in {
+		assert(data.length <= TGAHeader.ColourMapLength.max);
+	} body {
 		this.ImageColourMap = data;
+		this.ImageHeader.ColourMapLength =
+			cast(typeof(TGAHeader.ColourMapLength))
+				this.ImageColourMap.length;
 	}
 
 	bool isColourMapped() {
@@ -234,6 +340,14 @@ class Image {
 	} body {
 		this.ImageID = cast(ubyte[]) data;
 		this.ImageHeader.IDLength = this.ImageID.length;
+	}
+
+	bool hasID() {
+		return this.ImageHeader.IDLength != 0;
+	}
+
+	bool hasExtesionArea() {
+		return this.ImageExtAreaOffset != 0;
 	}
 
 	@property TGAImageType ImageType() {

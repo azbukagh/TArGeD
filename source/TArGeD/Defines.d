@@ -427,6 +427,25 @@ struct Pixel {
 		this.A = 0xFF;
 	}
 
+	void write(ref File f, size_t depth) {
+		switch(depth) {
+			case 32:
+				f.rawWrite(this.to32);
+				break;
+			case 24:
+				f.rawWrite(this.to24);
+				break;
+			case 16:
+				f.rawWrite(this.to16);
+				break;
+			case 8:
+				f.rawWrite(this.to8);
+				break;
+			default:
+				break;
+		}
+	}
+
 	ubyte[4] to32() {
 		return [
 			this.B,

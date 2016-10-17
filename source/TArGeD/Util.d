@@ -25,3 +25,8 @@ void writeToFile(T)(ref File f, T data) {
 	f.rawWrite(buffer);
 }
 
+ubyte[] writeToArray(T)(ref File f, T data, size_t size) {
+	const auto k = min(T.sizeof, size);
+	return nativeToLittleEndian!T(data)[0..k].dup;
+}
+
