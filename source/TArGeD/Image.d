@@ -5,6 +5,7 @@ import TArGeD.Util;
 import std.stdio : File, SEEK_CUR, SEEK_END;
 import std.traits : isArray, isImplicitlyConvertible;
 import std.datetime : DateTime, TimeOfDay;
+import std.algorithm;
 
 class Image {
 	private {
@@ -36,13 +37,10 @@ class Image {
 		}
 		this.ImageHeader.write(f);
 		if(this.hasID)
-			this.writeID(f,
-				this.ImageHeader,
-				this.ImageID);
-//		if(this.isColourMapped)
-//			this.writeColourMap(f,
-//				this.ImageHeader,
-//				this.ImageColourMap);
+			this.writeID(f);
+		if(this.isColourMapped)
+			this.writeColourMap(f);
+		this.writePixelData(f);
 	}
 
 	this(string filename) {
@@ -77,12 +75,12 @@ class Image {
 				f.rawRead(new ubyte[this.ImageHeader.IDLength]);
 	}
 
-	private void writeID(ref File f, in TGAHeader hdr, in ubyte[] id)
+	private void writeID(ref File f)
 	in {
 		assert(this.hasID);
-		assert(id.length >= hdr.IDLength);
+		assert(this.ImageID.length >= this.ImageHeader.IDLength);
 	} body {
-		f.rawWrite(id[0..hdr.IDLength]);
+		f.rawWrite(this.ImageID[0..this.ImageHeader.IDLength]);
 	}
 
 	private void readColourMap(ref File f) {
@@ -102,6 +100,14 @@ class Image {
 		}
 	}
 
+	private void writeColourMap(ref File f)
+	in {
+		assert(this.isColourMapped);
+	} body {
+		foreach(ref c; this.ColourMap)
+			c.write(f, this.ImageHeader.ColourMapDepth / 8);
+	}
+
 	private void readPixelData(ref File f) {
 		switch(this.ImageHeader.ImageType) with(TGAImageType) {
 			case UNCOMPRESSED_MAPPED:
@@ -113,6 +119,23 @@ class Image {
 			case COMPRESSED_TRUECOLOR:
 			case COMPRESSED_GRAYSCALE:
 				readCompressedPixelData(f);
+				break;
+			default:
+				throw new TArGeDException("Wrong image type");
+		}
+	}
+
+	private void writePixelData(ref File f) {
+		switch(this.ImageHeader.ImageType) with(TGAImageType) {
+			case UNCOMPRESSED_MAPPED:
+			case UNCOMPRESSED_TRUECOLOR:
+			case UNCOMPRESSED_GRAYSCALE:
+//				writeUncompressedPixelData(f);
+				break;
+			case COMPRESSED_MAPPED:
+			case COMPRESSED_TRUECOLOR:
+			case COMPRESSED_GRAYSCALE:
+//				writeCompressedPixelData(f);
 				break;
 			default:
 				throw new TArGeDException("Wrong image type");
@@ -134,6 +157,20 @@ class Image {
 			p = r(buf);
 		}
 	}
+
+//	private void writeUncompressedPixelData(ref File f) {
+//		auto r = (this.isColourMapped)
+//			? delegate (Pixel d) =>
+//				f.rawWrite(nativeToLittleEndian!uint(
+//					cast(uint) this.ImageColourMap
+//						.countUntil(d)
+//				))
+//			: delegate (Pixel d) =>
+//				d.write(f, this.ImageHeader.PixelDepth);
+
+//		foreach(ref p; this.ImagePixels)
+//			r(p);
+//	}
 
 	private void readCompressedPixelData(ref File f) {
 		auto r = (this.isColourMapped)
