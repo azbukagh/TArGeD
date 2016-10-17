@@ -35,6 +35,10 @@ class Image {
 			}
 		}
 		this.ImageHeader.write(f);
+		if(this.hasID)
+			this.writeID(f,
+				this.ImageHeader,
+				this.ImageID);
 //		if(this.isColourMapped)
 //			this.writeColourMap(f,
 //				this.ImageHeader,
@@ -78,6 +82,14 @@ class Image {
 		if(idLen) {
 			ImgID = f.rawRead(new ubyte[idLen]);
 		}
+	}
+
+	private void writeID(ref File f, in TGAHeader hdr, in ubyte[] id)
+	in {
+		assert(this.hasID);
+		assert(id.length >= hdr.IDLength);
+	} body {
+		f.rawWrite(id[0..hdr.IDLength]);
 	}
 
 	private void readColourMap(ref File f, ref TGAHeader hdr, out Pixel[] CMap) {
@@ -261,6 +273,10 @@ class Image {
 	} body {
 		this.ImageID = cast(ubyte[]) data;
 		this.ImageHeader.IDLength = this.ImageID.length;
+	}
+
+	bool hasID() {
+		return this.ImageHeader.IDLength != 0;
 	}
 
 	@property TGAImageType ImageType() {

@@ -1,0 +1,14 @@
+{
+	"name": "black-n-whiter",
+	"authors": [
+		"Azbuka"
+	],
+	"description": "TArGeD example. Makes input images black and white",
+	"copyright": "Copyright © 2016, Azbuka",
+	"license": "MIT",
+	"dependencies": {
+		"targed": {
+			"path": "../../"
+		}
+	}
+}
