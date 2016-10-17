@@ -13,11 +13,13 @@ void main(string[] args) {
 		case UNCOMPRESSED_MAPPED:
 		case UNCOMPRESSED_TRUECOLOR:
 			i.ImageType = TGAImageType.UNCOMPRESSED_GRAYSCALE;
+			i.PixelDepth = 8;
 			i.write(args[2]);
 			break;
 		case COMPRESSED_MAPPED:
 		case COMPRESSED_TRUECOLOR:
 			i.ImageType = TGAImageType.COMPRESSED_GRAYSCALE;
+			i.PixelDepth = 8;
 			i.write(args[2]);
 			break;
 		case UNCOMPRESSED_GRAYSCALE:
