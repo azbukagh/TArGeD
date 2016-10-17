@@ -130,7 +130,7 @@ class Image {
 			case UNCOMPRESSED_MAPPED:
 			case UNCOMPRESSED_TRUECOLOR:
 			case UNCOMPRESSED_GRAYSCALE:
-//				writeUncompressedPixelData(f);
+				writeUncompressedPixelData(f);
 				break;
 			case COMPRESSED_MAPPED:
 			case COMPRESSED_TRUECOLOR:
@@ -158,19 +158,20 @@ class Image {
 		}
 	}
 
-//	private void writeUncompressedPixelData(ref File f) {
-//		auto r = (this.isColourMapped)
-//			? delegate (Pixel d) =>
-//				f.rawWrite(nativeToLittleEndian!uint(
-//					cast(uint) this.ImageColourMap
-//						.countUntil(d)
-//				))
-//			: delegate (Pixel d) =>
-//				d.write(f, this.ImageHeader.PixelDepth);
+	private void writeUncompressedPixelData(ref File f) {
+		auto r = (this.isColourMapped)
+			? delegate (Pixel d) =>
+				writeToFile(f,
+					cast(ushort) this.ImageColourMap
+						.countUntil(d),
+					this.ImageHeader.ColourMapDepth/8
+				)
+			: delegate (Pixel d) =>
+				d.write(f, this.ImageHeader.PixelDepth);
 
-//		foreach(ref p; this.ImagePixels)
-//			r(p);
-//	}
+		foreach(ref p; this.ImagePixels)
+			r(p);
+	}
 
 	private void readCompressedPixelData(ref File f) {
 		auto r = (this.isColourMapped)

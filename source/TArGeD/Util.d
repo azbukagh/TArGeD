@@ -25,17 +25,10 @@ void writeToFile(T)(ref File f, T data) {
 	f.rawWrite(buffer);
 }
 
-//void writeToFile(ref File f, ubyte[] data, ushort size) {
-//	switch(size) {
-//		case 32:
-//			writeToFile!uint(data);
-//			break;
-//		case 24:
-//			writeToFile!
-//	f.rawWrite(
-
-//void writeToFile(T)(ref File f, ubyte[] data) {
-//	const auto k = min(T.sizeof, data.length);
-//	f.rawWrite(nativeToLittleEndian!T(data[0..k]));
-//}
+void writeToFile(T)(ref File f, T data, ushort size) {
+	const auto k = min(T.sizeof, size);
+	ubyte[] buf = new ubyte[k];
+	buf = nativeToLittleEndian!T(data);
+	f.rawWrite(buf[0..k]);
+}
 
