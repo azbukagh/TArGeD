@@ -6,6 +6,7 @@ import std.stdio : File, SEEK_CUR, SEEK_END;
 import std.traits : isArray, isImplicitlyConvertible;
 import std.datetime : DateTime, TimeOfDay;
 import std.algorithm;
+import std.conv;
 
 class Image {
 	private {
@@ -161,10 +162,14 @@ class Image {
 	private void writeUncompressedPixelData(ref File f) {
 		auto r = (this.isColourMapped)
 			? delegate (Pixel d) =>
-				writeToFile(f,
-					cast(ushort) this.ImageColourMap
-						.countUntil(d),
-					this.ImageHeader.ColourMapDepth/8
+				f.rawWrite(
+					writeToArray(
+						f,
+						this.ImageColourMap
+							.countUntil(d)
+							.to!ushort,
+						this.ImageHeader.PixelDepth/8
+					)
 				)
 			: delegate (Pixel d) =>
 				d.write(f, this.ImageHeader.PixelDepth);
@@ -202,6 +207,11 @@ class Image {
 				}
 			}
 		}
+	}
+
+	private void writeCompressedPixelData(ref File f) {
+	
+	
 	}
 
 	@property bool isNew() {
