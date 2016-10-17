@@ -7,6 +7,7 @@ import std.traits : isArray, isImplicitlyConvertible;
 import std.datetime : DateTime, TimeOfDay;
 import std.algorithm;
 import std.conv;
+import std.range;
 
 class Image {
 	private {
@@ -136,7 +137,7 @@ class Image {
 			case COMPRESSED_MAPPED:
 			case COMPRESSED_TRUECOLOR:
 			case COMPRESSED_GRAYSCALE:
-//				writeCompressedPixelData(f);
+				writeCompressedPixelData(f);
 				break;
 			default:
 				throw new TArGeDException("Wrong image type");
@@ -210,8 +211,46 @@ class Image {
 	}
 
 	private void writeCompressedPixelData(ref File f) {
-	
-	
+		auto r = (this.isColourMapped)
+			? delegate (Pixel d) =>
+				f.rawWrite(
+					writeToArray(
+						f,
+						this.ImageColourMap
+							.countUntil(d)
+							.to!ushort,
+						this.ImageHeader.PixelDepth/8
+					)
+				)
+			: delegate (Pixel d) =>
+				d.write(f, this.ImageHeader.PixelDepth);
+		auto pixels = this.ImagePixels;
+		while(pixels.length) {
+			// Find the first occurrence of two equal pixels next to each other
+			auto nextPixels = pixels.findAdjacent;
+
+			// Everything before that point should be written as raw packets.
+			// Max packet size is 128 pixels so make chunks of that size
+			foreach(const ref packet; pixels[0 .. $ - nextPixels.length].chunks(128)) {
+				f.write(to!ubyte(packet.length-1));
+				foreach(const ref p; packet)
+					r(p);
+			}
+
+			// If there are more pixels in the image, the next pixels can be RLE encoded
+			if(nextPixels.length){
+				// Find the point at which the pixel data changes
+				pixels = nextPixels.find!"a!=b"(nextPixels[0]);
+
+				// Everything before that point should be written as RLE packets
+				foreach(const ref packet; nextPixels[0 .. $ - pixels.length].chunks(128)){
+					f.write(to!ubyte(packet.length-1 | 0x80));
+					r(packet[0]);
+				}
+			} else {
+				break;
+			}
+		}
 	}
 
 	@property bool isNew() {
