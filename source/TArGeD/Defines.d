@@ -7,7 +7,6 @@ import std.datetime : DateTime, TimeOfDay;
 import std.array : appender;
 import std.format : formattedWrite;
 import std.stdio : File, SEEK_CUR, SEEK_SET;
-import std.string : toStringz;
 import std.conv : to;
 import TArGeD.Util;
 
@@ -165,7 +164,7 @@ struct TGAVersion {
 	}
 
 	void write(ref File f) {
-		f.writeToFile(cast(ushort) (this.Number * 100));
+		f.writeToFile((this.Number * 100).to!ushort);
 		f.write(this.Letter);
 	}
 }
@@ -363,20 +362,20 @@ struct TGAExtensionArea {
 	uint write(ref File f) {
 		uint ret = cast(uint) f.tell;
 		f.writeToFile(this.Size);
-		f.write(this.AuthorName.toStringz);
+		f.write(this.AuthorName, "\0");
 		foreach(size_t i; 0..4)
-			f.write(this.AuthorComments[i].toStringz);
+			f.write(this.AuthorComments[i], "\0");
 		f.writeToFile(this.Timestamp.month.to!ushort);
 		f.writeToFile(this.Timestamp.day.to!ushort);
 		f.writeToFile(this.Timestamp.year.to!ushort);
 		f.writeToFile(this.Timestamp.hour.to!ushort);
 		f.writeToFile(this.Timestamp.minute.to!ushort);
 		f.writeToFile(this.Timestamp.second.to!ushort);
-		f.write(this.JobName.toStringz);
+		f.write(this.JobName, "\0");
 		f.writeToFile(this.JobTime.hour.to!ushort);
 		f.writeToFile(this.JobTime.minute.to!ushort);
 		f.writeToFile(this.JobTime.second.to!ushort);
-		f.write(this.SoftwareID.toStringz);
+		f.write(this.SoftwareID, "\0");
 		this.SoftwareVersion.write(f);
 		f.writeToFile(this.KeyColour);
 		this.AspectRatio.write(f);

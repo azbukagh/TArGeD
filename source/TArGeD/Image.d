@@ -2,7 +2,7 @@ module TArGeD.Image;
 
 import TArGeD.Defines;
 import TArGeD.Util;
-import std.stdio : File, SEEK_CUR, SEEK_END;
+import std.stdio : writeln, File, SEEK_CUR, SEEK_END;
 import std.traits : isArray, isImplicitlyConvertible;
 import std.datetime : DateTime, TimeOfDay;
 import std.algorithm;
@@ -79,7 +79,7 @@ class Image {
 	private void writeFooter(ref File f) {
 		f.writeToFile(this.ImageExtAreaOffset);
 		f.writeToFile(this.ImageDevDirOffset);
-		f.write("TRUEVISION-XFILE.".toStringz);
+		f.write("TRUEVISION-XFILE.\0");
 	}
 
 	private void readID(ref File f) {
