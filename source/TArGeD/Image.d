@@ -8,6 +8,7 @@ import std.datetime : DateTime, TimeOfDay;
 import std.algorithm;
 import std.conv;
 import std.range;
+import std.string : toStringz;
 
 class Image {
 	private {
@@ -43,6 +44,10 @@ class Image {
 		if(this.isColourMapped)
 			this.writeColourMap(f);
 		this.writePixelData(f);
+		if(this.isNew) {
+			this.ImageExtAreaOffset = this.ImageExtArea.write(f);
+			this.writeFooter(f);
+		}
 	}
 
 	this(string filename) {
@@ -64,11 +69,17 @@ class Image {
 		f.seek(-26, SEEK_END);
 		ubyte[26] buf;
 		f.rawRead(buf);
-		this.isNew = (buf[8..24] == "TRUEVISION-XFILE" && buf[24] == '.');
+		this.isNew = (buf[8..25] == "TRUEVISION-XFILE.");
 		if(this.isNew) {
 			this.ImageExtAreaOffset = readFromArray!uint(buf[0..4]);
 			this.ImageDevDirOffset = readFromArray!uint(buf[4..8]);
 		}
+	}
+
+	private void writeFooter(ref File f) {
+		f.writeToFile(this.ImageExtAreaOffset);
+		f.writeToFile(this.ImageDevDirOffset);
+		f.write("TRUEVISION-XFILE.".toStringz);
 	}
 
 	private void readID(ref File f) {
@@ -77,11 +88,9 @@ class Image {
 				f.rawRead(new ubyte[this.ImageHeader.IDLength]);
 	}
 
-	private void writeID(ref File f)
-	in {
-		assert(this.hasID);
-		assert(this.ImageID.length >= this.ImageHeader.IDLength);
-	} body {
+	private void writeID(ref File f) {
+		if(this.ImageID.length != this.ImageHeader.IDLength)
+			throw new TArGeDException("Wring ID length");
 		f.rawWrite(this.ImageID[0..this.ImageHeader.IDLength]);
 	}
 

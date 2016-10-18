@@ -7,6 +7,8 @@ import std.datetime : DateTime, TimeOfDay;
 import std.array : appender;
 import std.format : formattedWrite;
 import std.stdio : File, SEEK_CUR, SEEK_SET;
+import std.string : toStringz;
+import std.conv : to;
 import TArGeD.Util;
 
 class TArGeDException : Exception {
@@ -164,7 +166,7 @@ struct TGAVersion {
 
 	void write(ref File f) {
 		f.writeToFile(cast(ushort) (this.Number * 100));
-		f.writeToFile(this.Letter);
+		f.write(this.Letter);
 	}
 }
 
@@ -356,6 +358,34 @@ struct TGAExtensionArea {
 //			foreach(ref i; this.ScanLineTable)
 //				i	= f.readFromFile!(typeof(ScanLineTable[0]));
 //		}
+	}
+
+	uint write(ref File f) {
+		uint ret = cast(uint) f.tell;
+		f.writeToFile(this.Size);
+		f.write(this.AuthorName.toStringz);
+		foreach(size_t i; 0..4)
+			f.write(this.AuthorComments[i].toStringz);
+		f.writeToFile(this.Timestamp.month.to!ushort);
+		f.writeToFile(this.Timestamp.day.to!ushort);
+		f.writeToFile(this.Timestamp.year.to!ushort);
+		f.writeToFile(this.Timestamp.hour.to!ushort);
+		f.writeToFile(this.Timestamp.minute.to!ushort);
+		f.writeToFile(this.Timestamp.second.to!ushort);
+		f.write(this.JobName.toStringz);
+		f.writeToFile(this.JobTime.hour.to!ushort);
+		f.writeToFile(this.JobTime.minute.to!ushort);
+		f.writeToFile(this.JobTime.second.to!ushort);
+		f.write(this.SoftwareID.toStringz);
+		this.SoftwareVersion.write(f);
+		f.writeToFile(this.KeyColour);
+		this.AspectRatio.write(f);
+		this.Gamma.write(f);
+		f.writeToFile(cast(uint) 0);	//	TODO
+		f.writeToFile(cast(uint) 0);	// Some offsets
+		f.writeToFile(cast(uint) 0);	//
+		f.writeToFile(this.AttributesType);
+		return ret;
 	}
 }
 

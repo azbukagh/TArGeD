@@ -6,6 +6,7 @@ module TArGeD.Util;
 import std.stdio : File;
 import std.bitmanip : littleEndianToNative, nativeToLittleEndian;
 import std.algorithm : min;
+import std.traits : isIntegral;
 
 T readFromFile(T)(ref File f) {
 	ubyte[T.sizeof] buffer;
@@ -20,7 +21,8 @@ T readFromArray(T)(ubyte[] data) {
 	return littleEndianToNative!T(o);
 }
 
-void writeToFile(T)(ref File f, T data) {
+void writeToFile(T)(ref File f, T data)
+if(isIntegral!T) {
 	ubyte[T.sizeof] buffer = nativeToLittleEndian!T(data);
 	f.rawWrite(buffer);
 }
