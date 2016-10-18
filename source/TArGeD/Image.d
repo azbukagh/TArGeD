@@ -88,9 +88,11 @@ class Image {
 				f.rawRead(new ubyte[this.ImageHeader.IDLength]);
 	}
 
-	private void writeID(ref File f) {
-		if(this.ImageID.length != this.ImageHeader.IDLength)
-			throw new TArGeDException("Wring ID length");
+	private void writeID(ref File f)
+	in {
+		assert(this.hasID);
+		assert(this.ImageID.length == this.ImageHeader.IDLength);
+	} body {
 		f.rawWrite(this.ImageID[0..this.ImageHeader.IDLength]);
 	}
 
