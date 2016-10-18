@@ -4,7 +4,7 @@ TODO:
 - [x] Extension area reader
 - [ ] Developer fields reader
 - [x] Basic TARGA writer (Header, ID, Colour map, Pixel data)
-- [ ] Extension area writer
+- [X] Extension area writer
 - [ ] Developer fields writer
 - [ ] Tests
 - [ ] Optimization
