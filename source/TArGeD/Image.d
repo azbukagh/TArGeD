@@ -272,18 +272,18 @@ class Image {
 		this.isImageNewFormat = val;
 	}
 
-	@property Pixel[] Pixels() {
+	Pixel[] Pixels() {
 		return this.ImagePixels;
 	}
 
-	@property Pixel Pixels(size_t index)
+	Pixel Pixels(size_t index)
 	in {
 		assert(index < this.ImagePixels.length);
 	} body {
 		return this.ImagePixels[index];
 	}
 
-	@property Pixel Pixels(size_t x, size_t y)
+	Pixel Pixels(size_t x, size_t y)
 	in {
 		assert(x < this.Width);
 		assert(y < this.Height);
@@ -291,18 +291,18 @@ class Image {
 		return this.ImagePixels[x * this.Width + y];
 	}
 
-	@property void Pixels(Pixel[] data) {
+	void Pixels(Pixel[] data) {
 		this.ImagePixels = data;
 	}
 
-	@property void Pixels(Pixel data, size_t index)
+	void Pixels(Pixel data, size_t index)
 	in {
 		assert(index < this.ImagePixels.length);
 	} body {
 		this.ImagePixels[index] = data;
 	}
 
-	@property Pixel Pixels(Pixel data, size_t x, size_t y)
+	void Pixels(Pixel data, size_t x, size_t y)
 	in {
 		assert(x < this.Width);
 		assert(y < this.Height);
