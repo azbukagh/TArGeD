@@ -164,7 +164,11 @@ struct TGAVersion {
 	}
 
 	void write(ref File f) {
-		f.writeToFile((this.Number * 100).to!ushort);
+		try {
+			f.writeToFile((this.Number * 100).to!ushort);
+		} catch {
+			f.writeToFile(to!ushort(100));
+		}
 		f.write(this.Letter);
 	}
 }

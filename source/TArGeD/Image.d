@@ -23,6 +23,25 @@ class Image {
 		bool isImageNewFormat;
 	}
 
+	invariant {
+		switch(this.ImageHeader.ImageType) with(TGAImageType) {
+			case UNCOMPRESSED_MAPPED:
+			case COMPRESSED_MAPPED:
+				assert(this.ImageHeader.ColourMapType ==
+					TGAColourMapType.PRESENT);
+				break;
+			case UNCOMPRESSED_TRUECOLOR:
+			case UNCOMPRESSED_GRAYSCALE:
+			case COMPRESSED_TRUECOLOR:
+			case COMPRESSED_GRAYSCALE:
+				assert(this.ImageHeader.ColourMapType ==
+					TGAColourMapType.NOT_PRESENT);
+				break;
+			default:
+				break;
+		}
+	}
+
 	void write(string filename) {
 		this.write(File(filename, "wb"));
 	}
@@ -212,7 +231,7 @@ class Image {
 					this.ImagePixels[i] =
 						r(buf[1..this.ImageHeader.PixelDepth/8+1]);
 			} else {
-				for(size_t j=0; j < rep; j++, i++) {
+				for(size_t j = 0; j < rep; j++, i++) {
 					f.rawRead(buf[0..this.ImageHeader.PixelDepth/8]);
 					this.ImagePixels[i] =
 						r(buf[0..this.ImageHeader.PixelDepth/8]);
@@ -235,33 +254,102 @@ class Image {
 				)
 			: delegate (Pixel d) =>
 				d.write(f, this.ImageHeader.PixelDepth);
-		auto pixels = this.ImagePixels;
-		while(pixels.length) {
-			// Find the first occurrence of two equal pixels next to each other
-			auto nextPixels = pixels.findAdjacent;
 
-			// Everything before that point should be written as raw packets.
-			// Max packet size is 128 pixels so make chunks of that size
-			foreach(const ref packet; pixels[0 .. $ - nextPixels.length].chunks(128)) {
-				f.write(to!ubyte(packet.length-1));
-				foreach(const ref p; packet)
-					r(p);
-			}
-
-			// If there are more pixels in the image, the next pixels can be RLE encoded
-			if(nextPixels.length){
-				// Find the point at which the pixel data changes
-				pixels = nextPixels.find!"a!=b"(nextPixels[0]);
-
-				// Everything before that point should be written as RLE packets
-				foreach(const ref packet; nextPixels[0 .. $ - pixels.length].chunks(128)){
-					f.write(to!ubyte(packet.length-1 | 0x80));
-					r(packet[0]);
+		ptrdiff_t[] k;
+		Pixel lastPixel;
+		for(size_t l = 0; l < this.ImagePixels.length-1; l++) {
+			if(this.ImagePixels[l+1] == this.ImagePixels[l]) {
+				if((k.length != 0) && (k[$-1] > 0)) {
+					k[$-1]++;
+				} else {
+					k ~= 1;
 				}
 			} else {
-				break;
+				if((k.length != 0) && (k[$-1] < 0)) {
+					k[$-1]--;
+				} else if(this.ImagePixels[l] == lastPixel) {
+					k[$-1]++;
+				} else {
+					k ~= -1;
+				}
+			}
+			lastPixel = this.ImagePixels[l];
+//			count = countUntil!("a!=b")(this.ImagePixels[l..$], this.ImagePixels[l]);
+//			writeln("Count: ", count);
+//			if(count > 1) {
+//				writeln("Writing rle ", count);
+//				foreach(ref p; this.ImagePixels[l..l+count-1].chunks(128)) {
+//					f.write(to!ubyte(p.length-1 | 0x80));
+//					r(p[0]);
+//				}
+//				l += count;
+//				count = countUntil(this.ImagePixels[l..$], this.ImagePixels[l]);
+//				writeln("Writing raw ", l - count);
+//				foreach(ref p; this.ImagePixels[l..l+count].chunks(128)) {
+//					f.write(to!ubyte(p.length-1));
+//					foreach(ref px; p)
+//						r(px);
+//				}
+//				count = 0;
+//			} else if(count == 1) {
+//				writeln("Writing raw 1");
+//				f.write(to!ubyte(0));
+//				r(this.ImagePixels[l]);
+//				l++;
+//			} else if(count == -1) {
+//				foreach(ref p; this.ImagePixels[l..$].chunks(128)) {
+//					f.write(to!ubyte(p.length-1));
+//					foreach(ref px; p)
+//						r(px);
+//				}
+//				break;
+//			}
+		}
+		if(this.ImagePixels[$-1] == lastPixel) {
+			k[$-1]++;
+		} else {
+			k ~= -1;
+		}
+		writeln(k);
+		size_t l = 0;
+		foreach(c; k) {
+			if(c > 0) {
+				foreach(ref packet; this.ImagePixels[l..l+c].chunks(128)) {
+					writeln("Writing rle ", packet.length);
+					f.write(to!ubyte(packet.length-1) | 0x80);
+					r(packet[0]);
+				}
+				l += c;
+			} else {
+				foreach(ref packet; this.ImagePixels[l..l+(-c)].chunks(128)) {
+					writeln("Writing raw ", packet.length);
+					f.write(to!ubyte(packet.length-1));
+					foreach(ref p; packet)
+						r(p);
+				}
+				l += (-c);
 			}
 		}
+//		while(pixels.length) {
+//			auto nextPixels = pixels.findAdjacent;
+
+//			foreach(ref packet; pixels[0 .. $ - nextPixels.length].chunks(128)) {
+//				f.write(to!ubyte(packet.length-1));
+//				foreach(ref p; packet)
+//					r(p);
+//			}
+
+//			if(nextPixels.length){
+//				pixels = nextPixels.find!"a!=b"(nextPixels[0]);
+
+//				foreach(ref packet; nextPixels[0 .. $ - pixels.length].chunks(128)){
+//					f.write(to!ubyte(packet.length-1 | 0x80));
+//					r(packet[0]);
+//				}
+//			} else {
+//				break;
+//			}
+//		}
 	}
 
 	@property bool isNew() {
@@ -332,14 +420,14 @@ class Image {
 				this.ImageColourMap.length;
 	}
 
-	bool isColourMapped() {
+	@property bool isColourMapped() {
 		return this.ImageHeader.ColourMapType
 			== TGAColourMapType.NOT_PRESENT
 				? false
 				: true;
 	}
 
-	void isColourMapped(bool v) {
+	@property void isColourMapped(bool v) {
 		switch(this.ImageHeader.ImageType) with (TGAImageType) {
 			case UNCOMPRESSED_TRUECOLOR:
 			case UNCOMPRESSED_GRAYSCALE:
