@@ -7,12 +7,10 @@ void main(string[] args) {
 		return;
 	}
 
-	auto i = new Image(args[1]);
+	auto i = new TGAImage(args[1]);
 	writeln("Header:");
 	writeln("\tColour mapped?:\t", i.isColourMapped);
 	writeln("\tImageType:\t", i.ImageType);
-	if(i.isColourMapped)
-		writeln("\tColourMapDepth:\t", i.ColourMapDepth);
 	writeln("\tXOrigin:\t", i.XOrigin);
 	writeln("\tYOrigin:\t", i.YOrigin);
 	writefln("\tSize:\t%dx%d", i.Width, i.Height);

@@ -58,42 +58,6 @@ struct TGAHeader {
 	ubyte ImageDescriptor;	/// TODO
 
 	/**
-	*	Creates header
-	*	Params:
-	*		i	= type of the image
-	*		width	= width in pixels
-	*		height	= height in pixels
-	*		pixeldepth	= number of bits per pixel
-	*		xorig	= horizontal coordinate for the lower left corner of the image
-	*		yorig	= vertical coordinate for the lower left corner of the image
-	*		colourmapdepth	= number of bits per colour map entry
-	*/
-	this(TGAImageType i,
-		ushort width,
-		ushort height,
-		ubyte pixeldepth = 32,
-		ushort xorig = 0,
-		ushort yorig = 0,
-		ubyte colourmapdepth = 0) {
-			this.ImageType = i;
-			switch(this.ImageType) with(TGAImageType) {
-				case UNCOMPRESSED_MAPPED:
-				case COMPRESSED_MAPPED:
-					this.ColourMapType = TGAColourMapType.PRESENT;
-					break;
-				default:
-					this.ColourMapType = TGAColourMapType.NOT_PRESENT;
-					break;
-			}
-			this.Width = width;
-			this.Height = height;
-			this.PixelDepth = pixeldepth;
-			this.XOrigin = xorig;
-			this.YOrigin = yorig;
-			this.ColourMapDepth = colourmapdepth;
-		}
-
-	/**
 	*	Parses header of file
 	*/
 	this(ref ubyte* c, ubyte* s, ubyte* e) {
@@ -132,8 +96,10 @@ struct TGAVersion {
 		this.Letter = l;
 	}
 	/// ditto
-	this(ref File f) {
-		this(f.readFromFile!(ushort), f.readFromFile!(char));
+	this(ref ubyte* c, ubyte* s, ubyte* e) {
+		this(
+			c.readValue!(ushort)(s, e),
+			c.readValue!(char)(s, e));
 	}
 
 	/**
@@ -145,15 +111,6 @@ struct TGAVersion {
 			this.Number,
 			this.Letter);
 		return a.data;
-	}
-
-	void write(ref File f) {
-		try {
-			f.writeToFile((this.Number * 100).to!ushort);
-		} catch {
-			f.writeToFile(to!ushort(100));
-		}
-		f.write(this.Letter);
 	}
 }
 
@@ -178,8 +135,11 @@ struct TGARatio {
 		this.Denominator = d;
 	}
 
-	this(ref File f) {
-		this(f.readFromFile!(ushort), f.readFromFile!(ushort));
+	this(ref ubyte* c, ubyte* s, ubyte* e) {
+		this(
+			c.readValue!(ushort)(s, e),
+			c.readValue!(ushort)(s, e)
+		);
 	}
 
 
@@ -199,11 +159,6 @@ struct TGARatio {
 	*/
 	bool isPresented() {
 		return this.Denominator != 0;
-	}
-
-	void write(ref File f) {
-		f.writeToFile(this.Numerator);
-		f.writeToFile(this.Denominator);
 	}
 }
 
@@ -228,8 +183,11 @@ struct TGAGamma {
 		this.Denominator = d;
 	}
 
-	this(ref File f) {
-		this(f.readFromFile!(ushort), f.readFromFile!(ushort));
+	this(ref ubyte* c, ubyte* s, ubyte* e) {
+		this(
+			c.readValue!(ushort)(s, e),
+			c.readValue!(ushort)(s, e)
+		);
 	}
 
 	/**
@@ -258,11 +216,6 @@ struct TGAGamma {
 		return (this.Numerator <= 10 && this.Denominator == 0) ||
 			(this.Numerator < 10);
 	}
-
-	void write(ref File f) {
-		f.writeToFile(this.Numerator);
-		f.writeToFile(this.Denominator);
-	}
 }
 
 /**
@@ -285,25 +238,26 @@ struct TGAExtensionArea {
 	uint ScanLineOffset;	/// Offset of scan line table
 	ubyte AttributesType; /// Type of alpha channel
 
-	this(ref File f, uint extAreaOff) {
-		f.seek(extAreaOff, SEEK_SET);
+	this(ref ubyte* c, ref ubyte* s, ref ubyte* e) {
 		this.Size	=
-			f.readFromFile!(typeof(TGAExtensionArea.Size));
+			c.readValue!(typeof(TGAExtensionArea.Size))(s, e);
 		if(this.Size != 495) {
 			throw new TArGeDException("Bad ExtensionArea size");
 		}
-		this.AuthorName	=
-			f.rawRead(new char[41])[0..40];
-		foreach(size_t i; 0..4)
-			this.AuthorComments[i]	=
-				f.rawRead(new char[81])[0..80];
+		this.AuthorName = c.readArray!(typeof(this.AuthorName))(s, e);
+		++c;
+		foreach(size_t i; 0..4) {
+			this.AuthorComments[i] = c.readArray!(typeof(this.AuthorComments[i]))(s, e);
+			++c;
+		}
+
 		ushort Month, Day, Year, Hour, Minute, Second;
-		Month	= f.readFromFile!(ushort);
-		Day	= f.readFromFile!(ushort);
-		Year	= f.readFromFile!(ushort);
-		Hour	= f.readFromFile!(ushort);
-		Minute	= f.readFromFile!(ushort);
-		Second	= f.readFromFile!(ushort);
+		Month	= c.readValue!(ushort)(s, e);
+		Day	= c.readValue!(ushort)(s, e);
+		Year	= c.readValue!(ushort)(s, e);
+		Hour	= c.readValue!(ushort)(s, e);
+		Minute	= c.readValue!(ushort)(s, e);
+		Second	= c.readValue!(ushort)(s, e);
 		if((Year && Month && Day) != 0)
 			this.Timestamp = DateTime(Year,
 				Month,
@@ -311,33 +265,33 @@ struct TGAExtensionArea {
 				Hour,
 				Minute,
 				Second);
-		this.JobName	=
-			f.rawRead(new char[41])[0..40];
+		this.JobName = c.readArray!(typeof(this.JobName))(s, e);
+		++c;
 
 		ushort H, M, S;
-		H	= f.readFromFile!(ushort);
-		M	= f.readFromFile!(ushort);
-		S	= f.readFromFile!(ushort);
+		H	= c.readValue!(ushort)(s, e);
+		M	= c.readValue!(ushort)(s, e);
+		S	= c.readValue!(ushort)(s, e);
 		if((H && M && S) != 0)
 			this.JobTime	= TimeOfDay(H, M, S);
 
 
-		this.SoftwareID	=
-			f.rawRead(new char[41])[0..40];
-		this.SoftwareVersion	= TGAVersion(f);
+		this.SoftwareID = c.readArray!(typeof(this.SoftwareID))(s, e);
+		++c;
+		this.SoftwareVersion	= TGAVersion(c, s, e);
 		this.KeyColour	=
-			f.readFromFile!(typeof(TGAExtensionArea.KeyColour));
-		this.AspectRatio	= TGARatio(f);
-		this.Gamma	= TGAGamma(f);
+			c.readValue!(typeof(TGAExtensionArea.KeyColour))(s, e);
+		this.AspectRatio	= TGARatio(c, s, e);
+		this.Gamma	= TGAGamma(c, s, e);
 
 		this.ColourCorrectionOffset	=
-			f.readFromFile!(typeof(TGAExtensionArea.ColourCorrectionOffset));
+			c.readValue!(typeof(TGAExtensionArea.ColourCorrectionOffset))(s, e);
 		this.PostageStampOffset	=
-			f.readFromFile!(typeof(TGAExtensionArea.PostageStampOffset));
+			c.readValue!(typeof(TGAExtensionArea.PostageStampOffset))(s, e);
 		this.ScanLineOffset	=
-			f.readFromFile!(typeof(TGAExtensionArea.ScanLineOffset));
+			c.readValue!(typeof(TGAExtensionArea.ScanLineOffset))(s, e);
 		this.AttributesType	=
-			f.readFromFile!(typeof(TGAExtensionArea.AttributesType));
+			c.readValue!(typeof(TGAExtensionArea.AttributesType))(s, e);
 
 //		if(this.ScanLineOffset != 0) {
 //			f.seek(this.ExtensionArea.ScanLineOffset, SEEK_SET);
@@ -345,34 +299,6 @@ struct TGAExtensionArea {
 //			foreach(ref i; this.ScanLineTable)
 //				i	= f.readFromFile!(typeof(ScanLineTable[0]));
 //		}
-	}
-
-	uint write(ref File f) {
-		uint ret = cast(uint) f.tell;
-		f.writeToFile(this.Size);
-		f.write(this.AuthorName, "\0");
-		foreach(size_t i; 0..4)
-			f.write(this.AuthorComments[i], "\0");
-		f.writeToFile(this.Timestamp.month.to!ushort);
-		f.writeToFile(this.Timestamp.day.to!ushort);
-		f.writeToFile(this.Timestamp.year.to!ushort);
-		f.writeToFile(this.Timestamp.hour.to!ushort);
-		f.writeToFile(this.Timestamp.minute.to!ushort);
-		f.writeToFile(this.Timestamp.second.to!ushort);
-		f.write(this.JobName, "\0");
-		f.writeToFile(this.JobTime.hour.to!ushort);
-		f.writeToFile(this.JobTime.minute.to!ushort);
-		f.writeToFile(this.JobTime.second.to!ushort);
-		f.write(this.SoftwareID, "\0");
-		this.SoftwareVersion.write(f);
-		f.writeToFile(this.KeyColour);
-		this.AspectRatio.write(f);
-		this.Gamma.write(f);
-		f.writeToFile(cast(uint) 0);	//	TODO
-		f.writeToFile(cast(uint) 0);	// Some offsets
-		f.writeToFile(cast(uint) 0);	//
-		f.writeToFile(this.AttributesType);
-		return ret;
 	}
 }
 
