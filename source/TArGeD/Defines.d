@@ -22,7 +22,7 @@ class TArGeDException : Exception {
 /**
 *	Is colour map presented?
 */
-enum TGAColourMapType : ubyte { 
+enum TGAColourMapType : ubyte {
 	NOT_PRESENT	= 0,
 	PRESENT	= 1
 }
@@ -96,40 +96,24 @@ struct TGAHeader {
 	/**
 	*	Parses header of file
 	*/
-	this(ref File f) {
-		f.seek(0, SEEK_SET);
-		this.IDLength	= f.readFromFile!(typeof(TGAHeader.IDLength));
+	this(ref ubyte* c, ubyte* s, ubyte* e) {
+		this.IDLength	= c.readValue!(typeof(TGAHeader.IDLength))(s, e);
 		this.ColourMapType	=
-			f.readFromFile!(typeof(TGAHeader.ColourMapType));
-		this.ImageType	= f.readFromFile!(typeof(TGAHeader.ImageType));
+			 c.readValue!(typeof(TGAHeader.ColourMapType))(s, e);
+		this.ImageType	= c.readValue!(typeof(TGAHeader.ImageType))(s, e);
 		this.ColourMapOffset	=
-			f.readFromFile!(typeof(TGAHeader.ColourMapOffset));
+			c.readValue!(typeof(TGAHeader.ColourMapOffset))(s, e);
 		this.ColourMapLength	=
-			f.readFromFile!(typeof(TGAHeader.ColourMapLength));
+			c.readValue!(typeof(TGAHeader.ColourMapLength))(s, e);
 		this.ColourMapDepth	=
-			f.readFromFile!(typeof(TGAHeader.ColourMapDepth));
-		this.XOrigin	= f.readFromFile!(typeof(TGAHeader.XOrigin));
-		this.YOrigin	= f.readFromFile!(typeof(TGAHeader.YOrigin));
-		this.Width	= f.readFromFile!(typeof(TGAHeader.Width));
-		this.Height	= f.readFromFile!(typeof(TGAHeader.Height));
-		this.PixelDepth	= f.readFromFile!(typeof(TGAHeader.PixelDepth));
+			c.readValue!(typeof(TGAHeader.ColourMapDepth))(s, e);
+		this.XOrigin	= c.readValue!(typeof(TGAHeader.XOrigin))(s, e);
+		this.YOrigin	= c.readValue!(typeof(TGAHeader.YOrigin))(s, e);
+		this.Width	= c.readValue!(typeof(TGAHeader.Width))(s, e);
+		this.Height	= c.readValue!(typeof(TGAHeader.Height))(s, e);
+		this.PixelDepth	= c.readValue!(typeof(TGAHeader.PixelDepth))(s, e);
 		this.ImageDescriptor	=
-			f.readFromFile!(typeof(TGAHeader.ImageDescriptor));
-	}
-
-	void write(ref File f) {
-		f.writeToFile(this.IDLength);
-		f.writeToFile(this.ColourMapType);
-		f.writeToFile(this.ImageType);
-		f.writeToFile(this.ColourMapOffset);
-		f.writeToFile(this.ColourMapLength);
-		f.writeToFile(this.ColourMapDepth);
-		f.writeToFile(this.XOrigin);
-		f.writeToFile(this.YOrigin);
-		f.writeToFile(this.Width);
-		f.writeToFile(this.Height);
-		f.writeToFile(this.PixelDepth);
-		f.writeToFile(this.ImageDescriptor);
+			c.readValue!(typeof(TGAHeader.ImageDescriptor))(s, e);
 	}
 }
 
@@ -337,7 +321,7 @@ struct TGAExtensionArea {
 		if((H && M && S) != 0)
 			this.JobTime	= TimeOfDay(H, M, S);
 
-		
+
 		this.SoftwareID	=
 			f.rawRead(new char[41])[0..40];
 		this.SoftwareVersion	= TGAVersion(f);
@@ -510,4 +494,3 @@ struct Pixel {
 		];
 	}
 }
-

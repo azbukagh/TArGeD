@@ -7,6 +7,16 @@ import std.stdio : File;
 import std.bitmanip : littleEndianToNative, nativeToLittleEndian;
 import std.algorithm : min;
 import std.traits : isIntegral;
+import TArGeD.Defines;
+
+T readValue(T)(ref ubyte* c, ubyte* s, ubyte* e)
+in {
+	assert(c + T.sizeof <= e, "End of stream reached");
+} body {
+	ubyte[T.sizeof] buffer = c[0..T.sizeof];
+	c += T.sizeof;
+	return littleEndianToNative!T(buffer);
+}
 
 T readFromFile(T)(ref File f) {
 	ubyte[T.sizeof] buffer;
@@ -31,4 +41,3 @@ ubyte[] writeToArray(T)(ref File f, T data, size_t size) {
 	const auto k = min(T.sizeof, size);
 	return nativeToLittleEndian!T(data)[0..k].dup;
 }
-
