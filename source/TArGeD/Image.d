@@ -52,7 +52,6 @@ class TGAImage {
 
 	void readFooter() {
 		this.c = this.e - 25;
-		writeln(this.c[8..25].to!(char[]));
 		this.isImageNewFormat = (this.c[8..25] == "TRUEVISION-XFILE.");
 		if(this.isNew) {
 			this.ImageExtAreaOffset =
