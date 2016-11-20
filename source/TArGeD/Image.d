@@ -43,6 +43,7 @@ class TGAImage {
 	void read() {
 		this.readFooter();
 		this.readHeader();
+		this.readPixelData();
 		this.readExtensionArea();
 	}
 
@@ -71,6 +72,46 @@ class TGAImage {
 	void readExtensionArea() {
 		this.c = this.s + this.ImageExtAreaOffset;
 		this.ImageExtArea = TGAExtensionArea(c, s, e);
+	}
+
+	void readPixelData() {
+		switch(this.ImageType) with (TGAImageType) {
+			case UNCOMPRESSED_MAPPED:
+			case UNCOMPRESSED_GRAYSCALE:
+			case UNCOMPRESSED_TRUECOLOR:
+				readUPixelData();
+				break;
+			case COMPRESSED_MAPPED:
+			case COMPRESSED_GRAYSCALE:
+			case COMPRESSED_TRUECOLOR:
+				break;
+			default:
+				break;
+		}
+	}
+
+	private void readUPixelData() {
+		if(this.ImageHeader.ColourMapType == TGAColourMapType.PRESENT) {
+			const auto depth = this.ImageHeader.ColourMapDepth;
+			const auto len = this.ImageHeader.ColourMapLength;
+			const auto off = this.ImageHeader.ColourMapOffset;
+			Pixel[] cMap = new Pixel[len];
+			c += off * (depth / 8);
+			foreach(size_t i; 0..len - off)
+					cMap[i] = Pixel(c, s, e, depth);
+			this.ImagePixels.length = this.ImageHeader.Width *
+				this.ImageHeader.Height;
+			foreach(ref p; this.ImagePixels) {
+				uint v = c.readValue!(uint)(s, e);
+				writeln(v);
+				p = cMap[v]; // range violation
+			}
+		} else {
+			this.ImagePixels.length = this.ImageHeader.Width *
+				this.ImageHeader.Height;
+			foreach(ref p; this.ImagePixels)
+				p = Pixel(c, s, e, this.ImageHeader.PixelDepth);
+		}
 	}
 
 	@property bool isNew() {
@@ -121,13 +162,6 @@ class TGAImage {
 
 	@property void PixelDepth(ubyte depth) {
 		this.ImageHeader.PixelDepth = depth;
-	}
-
-	@property bool isColourMapped() {
-		return this.ImageHeader.ColourMapType
-			== TGAColourMapType.NOT_PRESENT
-				? false
-				: true;
 	}
 
 	@property OUT ID(OUT)() if(isImplicitlyConvertible!(ubyte[], OUT)) {

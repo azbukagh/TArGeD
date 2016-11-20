@@ -322,6 +322,25 @@ struct Pixel {
 	/// Red, Green, Blue and Alpha
 	ubyte R, G, B, A;
 
+	this(ref ubyte* c, ubyte* s, ubyte* e, ubyte depth) {
+		switch(depth) {
+			case 32:
+				this.r32(c, s, e);
+				break;
+			case 24:
+				this.r24(c, s, e);
+				break;
+			case 16:
+				this.r16(c, s, e);
+				break;
+			case 8:
+				this.r8(c, s, e);
+				break;
+			default:
+				throw new TArGeDException("Wrong pixel depth");
+		}
+	}
+
 	void r32(ref ubyte* c, ubyte* s, ubyte* e)
 	in {
 		assert(c + 3 <= e, "End of image reached");

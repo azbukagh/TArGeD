@@ -9,12 +9,14 @@ void main(string[] args) {
 
 	auto i = new TGAImage(args[1]);
 	writeln("Header:");
-	writeln("\tColour mapped?:\t", i.isColourMapped);
+	//writeln("\tColour mapped?:\t", i.isColourMapped);
 	writeln("\tImageType:\t", i.ImageType);
 	writeln("\tXOrigin:\t", i.XOrigin);
 	writeln("\tYOrigin:\t", i.YOrigin);
 	writefln("\tSize:\t%dx%d", i.Width, i.Height);
 	writeln("\tPixelDepth:\t", i.PixelDepth);
+
+	writeln(i.Pixels);
 
 	writefln("\tID:\t[%(%s, %)]", i.ID!(ubyte[]));
 //	if(i.ColorMap.length != 0) {
