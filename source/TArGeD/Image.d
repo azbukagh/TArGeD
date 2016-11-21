@@ -43,6 +43,7 @@ class TGAImage {
 	void read() {
 		this.readFooter();
 		this.readHeader();
+		this.readID();
 		this.readPixelData();
 		this.readExtensionArea();
 	}
@@ -67,6 +68,10 @@ class TGAImage {
 				);
 		}
 		this.c = this.s;
+	}
+
+	void readID() {
+		this.ImageID = c.readArray!(ubyte)(s, e, this.ImageHeader.IDLength);
 	}
 
 	void readExtensionArea() {
@@ -96,16 +101,13 @@ class TGAImage {
 			const auto len = this.ImageHeader.ColourMapLength;
 			const auto off = this.ImageHeader.ColourMapOffset;
 			Pixel[] cMap = new Pixel[len];
-			c += off * (depth / 8);
+			c += off * depth;
 			foreach(size_t i; 0..len - off)
 					cMap[i] = Pixel(c, s, e, depth);
 			this.ImagePixels.length = this.ImageHeader.Width *
 				this.ImageHeader.Height;
-			foreach(ref p; this.ImagePixels) {
-				uint v = c.readValue!(uint)(s, e);
-				writeln(v);
-				p = cMap[v]; // range violation
-			}
+			foreach(ref p; this.ImagePixels)
+				p = cMap[c.readValue!(uint)(s, e, this.ImageHeader.PixelDepth)];
 		} else {
 			this.ImagePixels.length = this.ImageHeader.Width *
 				this.ImageHeader.Height;

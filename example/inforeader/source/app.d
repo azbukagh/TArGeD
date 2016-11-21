@@ -16,7 +16,7 @@ void main(string[] args) {
 	writefln("\tSize:\t%dx%d", i.Width, i.Height);
 	writeln("\tPixelDepth:\t", i.PixelDepth);
 
-	writeln(i.Pixels);
+//	writeln(i.Pixels);
 
 	writefln("\tID:\t[%(%s, %)]", i.ID!(ubyte[]));
 //	if(i.ColorMap.length != 0) {

@@ -346,11 +346,10 @@ struct Pixel {
 		assert(c + 3 <= e, "End of image reached");
 		assert(c >= s, "Wrong pointer");
 	} body {
-		this.R = c[2];
-		this.G = c[1];
-		this.B = c[0];
-		this.A = c[3];
-		c += 4;
+		this.B = c.readValue!ubyte(s, e);
+		this.G = c.readValue!ubyte(s, e);
+		this.R = c.readValue!ubyte(s, e);
+		this.A = c.readValue!ubyte(s, e);
 	}
 
 	void r24(ref ubyte* c, ubyte* s, ubyte* e)
@@ -358,11 +357,10 @@ struct Pixel {
 		assert(c + 2 <= e, "End of image reached");
 		assert(c >= s, "Wrong pointer");
 	} body {
-		this.R = c[2];
-		this.G = c[1];
-		this.B = c[0];
+		this.B = c.readValue!ubyte(s, e);
+		this.G = c.readValue!ubyte(s, e);
+		this.R = c.readValue!ubyte(s, e);
 		this.A = 0xFF;
-		c += 3;
 	}
 
 	void r16(ref ubyte* c, ubyte* s, ubyte* e)
@@ -370,11 +368,12 @@ struct Pixel {
 		assert(c + 1 <= e, "End of image reached");
 		assert(c >= s, "Wrong pointer");
 	} body {
-		this.R = (c[1] & 0x7c) << 1;
-		this.G = ((c[1] & 0x03) << 6) | ((c[0] & 0xE0) >> 2);
-		this.B = (c[0] & 0x1F) << 3;
-		this.A = (c[1] & 0x80) ? 0xFF : 0;
-		c += 2;
+		const ubyte a = c.readValue!ubyte(s, e);
+		const ubyte b = c.readValue!ubyte(s, e);
+		this.R = (b & 0x7c) << 1;
+		this.G = ((b & 0x03) << 6) | ((a & 0xE0) >> 2);
+		this.B = (a & 0x1F) << 3;
+		this.A = (b & 0x80) ? 0xFF : 0;
 	}
 
 	void r8(ref ubyte* c, ubyte* s, ubyte* e)
@@ -382,11 +381,8 @@ struct Pixel {
 		assert(c <= e, "End of image reached");
 		assert(c >= s, "Wrong pointer");
 	} body {
-		this.R = c[0];
-		this.G = c[0];
-		this.B = c[0];
-		this.A = 0xFF;
 
-		++c;
+		this.B = this.G = this.R = c.readValue!ubyte(s, e);
+		this.A = 0xFF;
 	}
 }
